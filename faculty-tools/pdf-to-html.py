@@ -444,32 +444,40 @@ def normalize_heading_hierarchy(elements):
     if not elements:
         return elements
 
-    # Find all heading levels actually used in the document (H1-H6)
-    levels_used = set()
-    for elem in elements:
-        tag = elem['user_tag']
-        if tag and len(tag) >= 2 and tag[0] == 'H' and tag[1:].isdigit():
-            levels_used.add(int(tag[1:]))
+    # Step 1: Find all heading levels used
+    has_h1 = any(e['user_tag'] == 'H1' for e in elements)
+    has_h2 = any(e['user_tag'] == 'H2' for e in elements)
+    has_h3 = any(e['user_tag'] == 'H3' for e in elements)
+    has_h4 = any(e['user_tag'] == 'H4' for e in elements)
 
-    if not levels_used:
-        return elements
+    # Step 2: Determine what each level should map to
+    # Build list of levels that exist, in order
+    existing_levels = []
+    if has_h1:
+        existing_levels.append('H1')
+    if has_h2:
+        existing_levels.append('H2')
+    if has_h3:
+        existing_levels.append('H3')
+    if has_h4:
+        existing_levels.append('H4')
 
-    # Create a mapping from old levels to new sequential levels
-    # e.g., if document has H1, H3, H4 -> map {1: 1, 3: 2, 4: 3}
-    sorted_levels = sorted(levels_used)
+    # Target levels are H1, H2, H3, H4 in sequence
+    target_levels = ['H1', 'H2', 'H3', 'H4']
+
+    # Create mapping: existing_levels[i] -> target_levels[i]
     level_map = {}
-    for new_level, old_level in enumerate(sorted_levels, start=1):
-        level_map[old_level] = new_level
+    for i, existing in enumerate(existing_levels):
+        if i < len(target_levels):
+            level_map[existing] = target_levels[i]
 
-    # Apply the mapping to all headings
+    # Step 3: Apply mapping
     for elem in elements:
-        tag = elem['user_tag']
-        if tag and len(tag) >= 2 and tag[0] == 'H' and tag[1:].isdigit():
-            old_level = int(tag[1:])
-            if old_level in level_map:
-                new_level = level_map[old_level]
-                elem['user_tag'] = f'H{new_level}'
-                elem['suggested_tag'] = elem['user_tag']
+        old_tag = elem['user_tag']
+        if old_tag in level_map:
+            new_tag = level_map[old_tag]
+            elem['user_tag'] = new_tag
+            elem['suggested_tag'] = new_tag
 
     return elements
 
