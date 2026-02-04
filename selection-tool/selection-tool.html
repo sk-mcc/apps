@@ -1,0 +1,1726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Selection Sheet Tool</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+  <style>
+    /* AAA Accessible Light Mode - Designed */
+    :root {
+      --bg: #e8eff5;
+      --bg-card: #ffffff;
+      --bg-hover: #f0f5fa;
+      --border: #5a7a8a;
+      --border-light: #c5d5e0;
+      --text: #1e3a4a;
+      --text-muted: #4a6572;
+      --accent: #3a7ca5;
+      --accent-hover: #2d6485;
+      --accent-light: #d8ebf5;
+      --success: #2a7a4a;
+      --success-bg: #e5f2eb;
+      --warning: #6b5000;
+      --warning-bg: #fef8e8;
+      --error: #a32d2d;
+      --focus: #3a7ca5;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      font-size: 18px;
+      min-height: 100vh;
+    }
+
+    /* Focus styles for accessibility */
+    *:focus {
+      outline: 3px solid var(--focus);
+      outline-offset: 2px;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem 3rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    h1 {
+      font-size: 2.75rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #2d5a7b 0%, #3a8a7a 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 1.15rem;
+      font-weight: 400;
+    }
+
+    main {
+      max-width: 700px;
+      margin: 0 auto;
+      background: var(--bg-card);
+      border-radius: 16px;
+      padding: 2rem;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.04);
+    }
+
+    /* Upload Area */
+    .upload-area {
+      background: linear-gradient(180deg, #f8fbfd 0%, #ffffff 100%);
+      border: 3px dashed var(--border-light);
+      border-radius: 16px;
+      padding: 3rem 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .upload-area:hover,
+    .upload-area:focus-within {
+      border-color: var(--accent);
+      background: linear-gradient(180deg, var(--accent-light) 0%, #ffffff 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(58, 124, 165, 0.15);
+    }
+
+    .upload-area.drag-over {
+      border-color: var(--accent);
+      background: linear-gradient(180deg, var(--accent-light) 0%, #ffffff 100%);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(58, 124, 165, 0.15);
+    }
+
+    .upload-icon {
+      font-size: 3.5rem;
+      margin-bottom: 1rem;
+      display: block;
+      opacity: 0.9;
+    }
+
+    .upload-text {
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--text);
+    }
+
+    .upload-hint {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+    }
+
+    .upload-input {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      opacity: 0;
+    }
+
+    /* Results Section */
+    .results {
+      display: none;
+      margin-top: 1.5rem;
+    }
+
+    .results.visible {
+      display: block;
+    }
+
+    .file-list {
+      background: var(--accent-light);
+      border: none;
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      padding: 0.6rem 0;
+      border-bottom: 1px solid rgba(58, 124, 165, 0.15);
+      font-size: 1.1rem;
+    }
+
+    .file-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .file-item:first-child {
+      padding-top: 0;
+    }
+
+    .file-check {
+      color: var(--success);
+      font-weight: 700;
+      margin-right: 0.75rem;
+      font-size: 1.3rem;
+    }
+
+    .file-name {
+      font-weight: 600;
+    }
+
+    .file-status {
+      color: var(--text-muted);
+      margin-left: 0.5rem;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-block;
+      padding: 1.1rem 2rem;
+      font-size: 1.2rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #ffffff;
+      width: 100%;
+      box-shadow: 0 4px 12px rgba(58, 124, 165, 0.3);
+    }
+
+    .btn-primary:hover,
+    .btn-primary:focus {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(58, 124, 165, 0.35);
+    }
+
+    .btn-primary:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    /* Flagged Items Section */
+    .flagged-section {
+      margin-top: 1.5rem;
+      text-align: center;
+    }
+
+    .flagged-note {
+      color: var(--text-muted);
+      font-size: 1rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .flagged-toggle {
+      background: none;
+      border: none;
+      color: var(--accent);
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: underline;
+      padding: 0.5rem;
+    }
+
+    .flagged-toggle:hover,
+    .flagged-toggle:focus {
+      color: var(--accent-hover);
+    }
+
+    .flagged-details {
+      display: none;
+      margin-top: 1rem;
+      text-align: left;
+      background: var(--warning-bg);
+      border: 2px solid var(--warning);
+      border-radius: 8px;
+      padding: 1.25rem;
+    }
+
+    .flagged-details.visible {
+      display: block;
+    }
+
+    .flagged-details-header {
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      color: var(--warning);
+    }
+
+    .flagged-list {
+      list-style: none;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .flagged-item {
+      padding: 0.5rem 0;
+      border-bottom: 1px solid rgba(122, 77, 0, 0.2);
+      font-size: 1rem;
+    }
+
+    .flagged-item:last-child {
+      border-bottom: none;
+    }
+
+    .flagged-file {
+      font-weight: 600;
+      color: var(--warning);
+    }
+
+    /* Add More Files */
+    .add-more {
+      margin-top: 1.25rem;
+      text-align: center;
+    }
+
+    .add-more-btn {
+      background: var(--bg-card);
+      border: 2px solid var(--border-light);
+      color: var(--text);
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .add-more-btn:hover,
+    .add-more-btn:focus {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-light);
+    }
+
+    /* Clear/Reset */
+    .reset-section {
+      margin-top: 2rem;
+      text-align: center;
+    }
+
+    .reset-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      cursor: pointer;
+      text-decoration: underline;
+      padding: 0.5rem;
+    }
+
+    .reset-btn:hover,
+    .reset-btn:focus {
+      color: var(--text);
+    }
+
+    /* Error Display */
+    .error-message {
+      background: #f8ebe8;
+      border: 2px solid var(--error);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 1rem;
+      color: var(--error);
+      font-weight: 500;
+      display: none;
+    }
+
+    .error-message.visible {
+      display: block;
+    }
+
+    /* Loading State */
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .loading.visible {
+      display: block;
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      border: 4px solid var(--border-light);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      margin-top: 1rem;
+      font-size: 1.1rem;
+      color: var(--text-muted);
+    }
+
+    /* Skip link for accessibility */
+    .skip-link {
+      position: absolute;
+      top: -40px;
+      left: 0;
+      background: var(--accent);
+      color: #ffffff;
+      padding: 8px;
+      z-index: 100;
+    }
+
+    .skip-link:focus {
+      top: 0;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .container {
+        padding: 1.5rem 1rem 2rem;
+      }
+
+      h1 {
+        font-size: 2rem;
+      }
+
+      main {
+        padding: 1.5rem;
+        border-radius: 12px;
+      }
+
+      .upload-area {
+        padding: 2rem 1rem;
+      }
+
+      .btn {
+        padding: 0.875rem 1.5rem;
+        font-size: 1.1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+  
+  <div class="container" id="main-content">
+    <header>
+      <h1>Selection Sheet Tool</h1>
+      <p class="subtitle">Upload schedule files to generate faculty selection sheets</p>
+    </header>
+
+    <main>
+      <!-- Upload Area -->
+      <div class="upload-area" id="upload-area" role="button" tabindex="0" aria-label="Upload schedule files">
+        <span class="upload-icon" aria-hidden="true">📂</span>
+        <p class="upload-text">Drop schedule files here</p>
+        <p class="upload-hint">or click to browse — supports multiple files</p>
+        <input type="file" id="file-input" class="upload-input" accept=".xlsx,.xls" multiple aria-label="Choose files to upload">
+      </div>
+
+      <!-- Loading State -->
+      <div class="loading" id="loading" aria-live="polite">
+        <div class="loading-spinner" aria-hidden="true"></div>
+        <p class="loading-text">Processing files...</p>
+      </div>
+
+      <!-- Error Display -->
+      <div class="error-message" id="error-message" role="alert"></div>
+
+      <!-- Results -->
+      <div class="results" id="results" aria-live="polite">
+        <div class="file-list" id="file-list" role="list" aria-label="Processed files">
+          <!-- File items will be inserted here -->
+        </div>
+
+        <button class="btn btn-primary" id="download-all-btn" type="button">
+          Download All Spreadsheets
+        </button>
+
+        <div class="flagged-section">
+          <p class="flagged-note">Any issues found are already marked in your spreadsheets.</p>
+          <button class="flagged-toggle" id="flagged-toggle" type="button" aria-expanded="false" aria-controls="flagged-details">
+            Preview flagged items
+          </button>
+          
+          <div class="flagged-details" id="flagged-details" role="region" aria-label="Flagged items list">
+            <p class="flagged-details-header">These items are flagged in the Flags/Issues column of your downloaded spreadsheets:</p>
+            <ul class="flagged-list" id="flagged-list">
+              <!-- Flagged items will be inserted here -->
+            </ul>
+          </div>
+        </div>
+
+        <div class="add-more">
+          <button class="add-more-btn" id="add-more-btn" type="button">
+            + Add more files
+          </button>
+        </div>
+
+        <div class="reset-section">
+          <button class="reset-btn" id="reset-btn" type="button">
+            Clear all and start over
+          </button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    // ===== STATE =====
+    const processedFiles = []; // Array of { filename, semesterCode, campusName, processedSections, detectedBundles, detectedFlags, rawOriginalData, originalData }
+
+    // ===== DOM ELEMENTS =====
+    const uploadArea = document.getElementById('upload-area');
+    const fileInput = document.getElementById('file-input');
+    const loadingEl = document.getElementById('loading');
+    const errorEl = document.getElementById('error-message');
+    const resultsEl = document.getElementById('results');
+    const fileListEl = document.getElementById('file-list');
+    const downloadAllBtn = document.getElementById('download-all-btn');
+    const flaggedToggle = document.getElementById('flagged-toggle');
+    const flaggedDetails = document.getElementById('flagged-details');
+    const flaggedList = document.getElementById('flagged-list');
+    const addMoreBtn = document.getElementById('add-more-btn');
+    const resetBtn = document.getElementById('reset-btn');
+
+    // ===== EVENT LISTENERS =====
+    uploadArea.addEventListener('click', () => fileInput.click());
+    uploadArea.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        fileInput.click();
+      }
+    });
+
+    uploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.classList.add('drag-over');
+    });
+
+    uploadArea.addEventListener('dragleave', () => {
+      uploadArea.classList.remove('drag-over');
+    });
+
+    uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('drag-over');
+      const files = Array.from(e.dataTransfer.files).filter(f => 
+        f.name.endsWith('.xlsx') || f.name.endsWith('.xls')
+      );
+      if (files.length > 0) {
+        handleFiles(files);
+      }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      const files = Array.from(e.target.files);
+      if (files.length > 0) {
+        handleFiles(files);
+      }
+    });
+
+    downloadAllBtn.addEventListener('click', downloadAll);
+
+    flaggedToggle.addEventListener('click', () => {
+      const isExpanded = flaggedDetails.classList.toggle('visible');
+      flaggedToggle.setAttribute('aria-expanded', isExpanded);
+      flaggedToggle.textContent = isExpanded ? 'Hide flagged items' : 'Preview flagged items';
+    });
+
+    addMoreBtn.addEventListener('click', () => {
+      fileInput.click();
+    });
+
+    resetBtn.addEventListener('click', () => {
+      processedFiles.length = 0;
+      resultsEl.classList.remove('visible');
+      uploadArea.style.display = 'block';
+      errorEl.classList.remove('visible');
+      flaggedDetails.classList.remove('visible');
+      flaggedToggle.setAttribute('aria-expanded', 'false');
+      flaggedToggle.textContent = 'Preview flagged items';
+      fileInput.value = '';
+    });
+
+    // ===== CONFIGURATION =====
+    const HEADER_KEYWORDS = [
+      'Section ID', 'Dept', 'Section Name', 'Start Date', 'End Date',
+      'Bldg', 'Room', 'Days', 'Start Time', 'End Time', '# of Weeks',
+      'Section Capacity', 'Primary Faculty Name', 'Instr Method'
+    ];
+
+    const equatedHours = {
+      'ENGL 1170': 2,
+      'ENGL 1181': 5,
+      'ENGL 1190': 5,
+      'ENGL 1191': 5,
+      'ENGL 1210': 4,
+      'ENGL 1220': 4,
+      'ENGL 1211': 4,
+      'ENGL 1221': 4,
+    };
+
+    const creditHours = {
+      'ENGL 1170': 1,
+      'ENGL 1181': 4,
+      'ENGL 1190': 4,
+      'ENGL 1191': 4,
+      'ENGL 1210': 3,
+      'ENGL 1220': 3,
+      'ENGL 1211': 3,
+      'ENGL 1221': 3,
+      'ENGL 1730': 3,
+      'ENGL 2410': 3,
+      'ENGL 2420': 3,
+      'ENGL 2740': 3,
+    };
+
+    function getEquatedHours(course) {
+      return equatedHours[course] || '';
+    }
+
+    function getCreditHours(course) {
+      return creditHours[course] || 3;
+    }
+
+    // ===== FILE HANDLING =====
+    async function handleFiles(files) {
+      showLoading(true);
+      showError(null);
+
+      for (const file of files) {
+        try {
+          await processFile(file);
+        } catch (err) {
+          showError(`Error processing ${file.name}: ${err.message}`);
+        }
+      }
+
+      showLoading(false);
+      if (processedFiles.length > 0) {
+        renderResults();
+      }
+    }
+
+    function processFile(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+
+        reader.onload = (e) => {
+          try {
+            const data = new Uint8Array(e.target.result);
+
+            // Read with dates parsed for processing
+            const workbook = XLSX.read(data, { type: 'array', cellDates: true });
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            const originalData = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
+
+            // Read again without date parsing for Original Data sheet
+            const rawWorkbook = XLSX.read(data, { type: 'array', cellDates: false });
+            const rawFirstSheet = rawWorkbook.Sheets[rawWorkbook.SheetNames[0]];
+            const rawOriginalData = XLSX.utils.sheet_to_json(rawFirstSheet, { header: 1, defval: '', raw: false });
+
+            // Detect header row
+            const headerRow = detectHeaderRow(originalData);
+            if (headerRow === -1) {
+              throw new Error('Could not detect header row');
+            }
+
+            // Process sections
+            const result = processData(originalData, rawOriginalData, headerRow);
+
+            // Check if already have this file
+            const existingIndex = processedFiles.findIndex(f => f.filename === file.name);
+            if (existingIndex >= 0) {
+              processedFiles[existingIndex] = { filename: file.name, ...result };
+            } else {
+              processedFiles.push({ filename: file.name, ...result });
+            }
+
+            resolve();
+          } catch (err) {
+            reject(err);
+          }
+        };
+
+        reader.onerror = () => reject(new Error('Failed to read file'));
+        reader.readAsArrayBuffer(file);
+      });
+    }
+
+    function detectHeaderRow(data) {
+      for (let i = 0; i < Math.min(20, data.length); i++) {
+        const row = data[i];
+        if (!row) continue;
+
+        const rowText = row.map(cell => String(cell || '').trim().toLowerCase()).join(' ');
+        let matches = 0;
+
+        for (const keyword of HEADER_KEYWORDS) {
+          if (rowText.includes(keyword.toLowerCase())) {
+            matches++;
+          }
+        }
+
+        if (matches >= 3) {
+          return i;
+        }
+      }
+      return -1;
+    }
+
+    // ===== DATA PROCESSING =====
+    function processData(originalData, rawOriginalData, headerRow) {
+      const headers = originalData[headerRow];
+      const colIndex = {};
+
+      headers.forEach((header, idx) => {
+        const h = String(header).trim();
+        if (h.includes('Section ID')) colIndex['Section ID'] = idx;
+        if (h.includes('Dept')) colIndex['Dept'] = idx;
+        if (h.includes('Section Name')) colIndex['Section Name'] = idx;
+        if (h.includes('Start Date')) colIndex['Start Date'] = idx;
+        if (h.includes('End Date')) colIndex['End Date'] = idx;
+        if (h.includes('Bldg')) colIndex['Bldg'] = idx;
+        if (h.includes('Room')) colIndex['Room'] = idx;
+        if (h.includes('Days')) colIndex['Days'] = idx;
+        if (h.includes('Start Time')) colIndex['Start Time'] = idx;
+        if (h.includes('End Time')) colIndex['End Time'] = idx;
+        if (h.includes('# of Weeks') || h.includes('Weeks')) colIndex['Weeks'] = idx;
+        if (h.includes('Section Capacity') || h.includes('Capacity')) colIndex['Section Capacity'] = idx;
+        if (h.includes('Primary Faculty')) colIndex['Primary Faculty Name'] = idx;
+      });
+
+      const rows = originalData.slice(headerRow + 1);
+
+      let processedSections = rows.map((row, idx) => {
+        const sectionName = row[colIndex['Section Name']];
+        const parsed = parseSectionName(sectionName);
+        if (!parsed) return null;
+
+        const startTime = row[colIndex['Start Time']];
+        const endTime = row[colIndex['End Time']];
+        const startDate = row[colIndex['Start Date']];
+        const endDate = row[colIndex['End Date']];
+        const capacity = parseInt(row[colIndex['Section Capacity']], 10) || 0;
+        const dept = row[colIndex['Dept']] || '';
+
+        return {
+          id: idx,
+          raw: row,
+          sectionName,
+          ...parsed,
+          course: `${parsed.subject} ${parsed.courseNum}`,
+          mode: getMode(parsed.modeCode),
+          campus: getCampus(parsed.modeCode, dept),
+          dept: dept,
+          days: row[colIndex['Days']] || '',
+          startTime: startTime,
+          endTime: endTime,
+          timeRange: formatTimeRange(startTime, endTime),
+          building: row[colIndex['Bldg']] || '',
+          room: row[colIndex['Room']] || '',
+          startDate: formatDate(startDate),
+          endDate: formatDate(endDate),
+          dateRange: startDate && endDate ? `${formatDate(startDate)} - ${formatDate(endDate)}` : '',
+          capacity,
+          weeks: parseInt(row[colIndex['Weeks']], 10) || 16,
+          primaryFaculty: row[colIndex['Primary Faculty Name']] || '',
+        };
+      }).filter(Boolean);
+
+      // Detect bundles and flags
+      const { detectedBundles, detectedFlags, assignedSections } = detectBundles(processedSections);
+
+      // Add more validation flags
+      detectSchedulingConflicts(processedSections, detectedBundles, assignedSections, detectedFlags);
+      detectCapacityIssues(processedSections, detectedFlags);
+      detectSchedulingTimeIssues(processedSections, detectedFlags);
+
+      // Sort sections
+      processedSections = sortSections(processedSections, detectedBundles, assignedSections);
+
+      // Determine semester and campus
+      const { semesterCode, campusName } = determineSemesterAndCampus(processedSections);
+
+      return {
+        processedSections,
+        detectedBundles,
+        detectedFlags,
+        assignedSections,
+        rawOriginalData,
+        originalData,
+        headerRow,
+        semesterCode,
+        campusName,
+      };
+    }
+
+    function parseSectionName(name) {
+      if (!name) return null;
+      const match = String(name).match(/^([A-Z]+)-(\d+)-([A-Z])(\d+)$/i);
+      if (!match) return null;
+
+      return {
+        subject: match[1].toUpperCase(),
+        courseNum: match[2],
+        modeCode: match[3].toUpperCase(),
+        sequence: match[4],
+        section: match[3].toUpperCase() + match[4],
+      };
+    }
+
+    function getMode(code) {
+      const modes = { 'C': 'In-Person', 'S': 'In-Person', 'O': 'Online', 'H': 'Hybrid', 'R': 'Remote' };
+      return modes[code] || 'Unknown';
+    }
+
+    function getCampus(code, dept) {
+      if (code === 'H') {
+        const deptUpper = (dept || '').toUpperCase().trim();
+        if (deptUpper === 'COMMC') return 'Center';
+        if (deptUpper === 'COMMS') return 'South';
+        return 'Unknown';
+      }
+      const campuses = { 'C': 'Center', 'S': 'South', 'O': 'Online', 'R': 'Online' };
+      return campuses[code] || 'Unknown';
+    }
+
+    function formatDate(date) {
+      if (!date) return '';
+      if (date instanceof Date) {
+        return `${date.getMonth() + 1}/${date.getDate()}/${String(date.getFullYear()).slice(-2)}`;
+      }
+      return String(date);
+    }
+
+    function formatTimeRange(start, end) {
+      const formatTime = (time) => {
+        if (!time) return null;
+        let hours, minutes;
+
+        if (typeof time === 'number') {
+          const totalMinutes = Math.round(time * 24 * 60);
+          hours = Math.floor(totalMinutes / 60);
+          minutes = totalMinutes % 60;
+        } else if (time instanceof Date) {
+          hours = time.getHours();
+          minutes = time.getMinutes();
+        } else if (typeof time === 'string' && time.includes(':')) {
+          const parts = time.split(':');
+          hours = parseInt(parts[0], 10);
+          minutes = parseInt(parts[1], 10);
+        } else {
+          return null;
+        }
+
+        const period = hours >= 12 ? 'PM' : 'AM';
+        const displayHours = hours % 12 || 12;
+        const displayMinutes = minutes > 0 ? `:${String(minutes).padStart(2, '0')}` : '';
+        return `${displayHours}${displayMinutes} ${period}`;
+      };
+
+      const startStr = formatTime(start);
+      const endStr = formatTime(end);
+
+      if (startStr && endStr) {
+        return `${startStr} - ${endStr}`;
+      }
+      return '';
+    }
+
+    // ===== BUNDLE DETECTION =====
+    function detectBundles(processedSections) {
+      const detectedBundles = [];
+      const assignedSections = new Set();
+      const detectedFlags = [];
+      let bundleId = 1;
+
+      function parseDate(str) {
+        if (!str) return null;
+        const parts = str.split('/');
+        if (parts.length !== 3) return null;
+        const month = parseInt(parts[0], 10) - 1;
+        const day = parseInt(parts[1], 10);
+        let year = parseInt(parts[2], 10);
+        year = year < 50 ? 2000 + year : 1900 + year;
+        return new Date(year, month, day);
+      }
+
+      function datesAlign(s1, s2) {
+        const start1 = parseDate(s1.startDate);
+        const start2 = parseDate(s2.startDate);
+        if (!start1 || !start2) return false;
+        const diffMs = Math.abs(start1 - start2);
+        const diffDays = diffMs / (1000 * 60 * 60 * 24);
+        return diffDays <= 14;
+      }
+
+      const engl1170 = processedSections.filter(s => s.course === 'ENGL 1170');
+      const engl1181 = processedSections.filter(s => s.course === 'ENGL 1181');
+
+      // 1170 + 1181 bundles
+      engl1170.forEach(s1170 => {
+        if (assignedSections.has(s1170.id)) return;
+
+        const matching1181 = engl1181.filter(s1181 => {
+          if (assignedSections.has(s1181.id)) return false;
+          if (s1181.capacity >= 26) return false;
+
+          if (s1170.modeCode !== s1181.modeCode) {
+            const campus1170 = ['C', 'S'].includes(s1170.modeCode) ? s1170.modeCode : 'online';
+            const campus1181 = ['C', 'S'].includes(s1181.modeCode) ? s1181.modeCode : 'online';
+            if (campus1170 !== campus1181 && campus1170 !== 'online' && campus1181 !== 'online') return false;
+          }
+
+          if (s1170.weeks !== s1181.weeks) return false;
+          if (!datesAlign(s1170, s1181)) return false;
+
+          if (['C', 'S'].includes(s1181.modeCode)) {
+            if (s1170.building && s1181.building && s1170.building === s1181.building &&
+                s1170.room && s1181.room && s1170.room === s1181.room) {
+              return true;
+            }
+          }
+
+          if (s1170.primaryFaculty && s1170.primaryFaculty.includes(s1181.sectionName)) return true;
+          if (s1181.primaryFaculty && s1181.primaryFaculty.includes(s1170.sectionName)) return true;
+
+          const seq1170 = parseInt(s1170.sequence, 10);
+          const seq1181 = parseInt(s1181.sequence, 10);
+          if (s1181.modeCode === s1170.modeCode && s1181.weeks === s1170.weeks) {
+            if (Math.abs(seq1181 - seq1170) <= 2) return true;
+          }
+
+          return false;
+        });
+
+        if (matching1181.length >= 2) {
+          const bundle1181 = matching1181.slice(0, 2);
+          detectedBundles.push({
+            id: `Bundle-${String(bundleId).padStart(2, '0')}`,
+            type: '1181+1170',
+            sections: [s1170, ...bundle1181],
+          });
+          assignedSections.add(s1170.id);
+          bundle1181.forEach(s => assignedSections.add(s.id));
+          bundleId++;
+        }
+      });
+
+      // 2410 + 2420 bundles
+      const engl2410 = processedSections.filter(s => s.course === 'ENGL 2410' && !assignedSections.has(s.id));
+      const engl2420 = processedSections.filter(s => s.course === 'ENGL 2420' && !assignedSections.has(s.id));
+
+      engl2410.forEach(s2410 => {
+        if (assignedSections.has(s2410.id)) return;
+
+        const matching2420 = engl2420.find(s2420 => {
+          if (assignedSections.has(s2420.id)) return false;
+          if (s2410.modeCode !== s2420.modeCode) return false;
+          if (s2410.weeks !== s2420.weeks) return false;
+          if (!datesAlign(s2410, s2420)) return false;
+
+          if (['C', 'S'].includes(s2410.modeCode)) {
+            return s2410.building === s2420.building &&
+                   s2410.room === s2420.room &&
+                   s2410.days === s2420.days;
+          }
+
+          if (s2410.capacity < 26 && s2420.capacity < 26) {
+            const seq2410 = parseInt(s2410.sequence, 10);
+            const seq2420 = parseInt(s2420.sequence, 10);
+            return Math.abs(seq2410 - seq2420) <= 2;
+          }
+
+          return false;
+        });
+
+        if (matching2420) {
+          detectedBundles.push({
+            id: `Bundle-${String(bundleId).padStart(2, '0')}`,
+            type: '2410+2420',
+            sections: [s2410, matching2420],
+          });
+          assignedSections.add(s2410.id);
+          assignedSections.add(matching2420.id);
+          bundleId++;
+        }
+      });
+
+      // Online 1181 pairs
+      const unassignedOnline1181 = engl1181.filter(s =>
+        !assignedSections.has(s.id) &&
+        s.modeCode === 'O' &&
+        s.capacity < 26 &&
+        s.capacity > 0
+      );
+
+      const pairedOnline1181 = new Set();
+      for (let i = 0; i < unassignedOnline1181.length; i++) {
+        if (pairedOnline1181.has(unassignedOnline1181[i].id)) continue;
+
+        const s1 = unassignedOnline1181[i];
+
+        const matchingPartner = unassignedOnline1181.find((s2, j) => {
+          if (i === j) return false;
+          if (pairedOnline1181.has(s2.id)) return false;
+          if (s1.weeks !== s2.weeks) return false;
+          if (!datesAlign(s1, s2)) return false;
+
+          const seq1 = parseInt(s1.sequence, 10);
+          const seq2 = parseInt(s2.sequence, 10);
+          return Math.abs(seq1 - seq2) <= 2;
+        });
+
+        if (matchingPartner) {
+          detectedBundles.push({
+            id: `Bundle-${String(bundleId).padStart(2, '0')}`,
+            type: 'online-1181-pair',
+            sections: [s1, matchingPartner],
+          });
+          assignedSections.add(s1.id);
+          assignedSections.add(matchingPartner.id);
+          pairedOnline1181.add(s1.id);
+          pairedOnline1181.add(matchingPartner.id);
+
+          detectedFlags.push({
+            section: s1,
+            message: '📋 Appears bundled with in-person 1170 - please verify',
+          });
+          detectedFlags.push({
+            section: matchingPartner,
+            message: '📋 Appears bundled with in-person 1170 - please verify',
+          });
+
+          bundleId++;
+        }
+      }
+
+      // Flag unassigned 1181s and 1170s
+      engl1181.forEach(s => {
+        if (!assignedSections.has(s.id) && s.capacity < 26 && s.capacity > 0) {
+          detectedFlags.push({
+            section: s,
+            message: '⚠️ Capacity suggests co-req but no matching 1170 found',
+          });
+        }
+      });
+
+      engl1170.forEach(s => {
+        if (!assignedSections.has(s.id)) {
+          detectedFlags.push({
+            section: s,
+            message: '⚠️ Missing paired 1181 sections - needs review',
+          });
+        }
+      });
+
+      return { detectedBundles, detectedFlags, assignedSections };
+    }
+
+    // ===== CONFLICT DETECTION =====
+    function detectSchedulingConflicts(processedSections, detectedBundles, assignedSections, detectedFlags) {
+      const inPersonSections = processedSections.filter(s =>
+        ['C', 'S'].includes(s.modeCode) && s.building && s.room && s.days
+      );
+
+      function parseDate(str) {
+        if (!str) return null;
+        const parts = str.split('/');
+        if (parts.length !== 3) return null;
+        const month = parseInt(parts[0], 10) - 1;
+        const day = parseInt(parts[1], 10);
+        let year = parseInt(parts[2], 10);
+        year = year < 50 ? 2000 + year : 1900 + year;
+        return new Date(year, month, day);
+      }
+
+      function datesOverlap(s1, s2) {
+        if (!s1.startDate || !s1.endDate || !s2.startDate || !s2.endDate) return false;
+        const start1 = parseDate(s1.startDate);
+        const end1 = parseDate(s1.endDate);
+        const start2 = parseDate(s2.startDate);
+        const end2 = parseDate(s2.endDate);
+        if (!start1 || !end1 || !start2 || !end2) return false;
+        return start1 <= end2 && start2 <= end1;
+      }
+
+      function toMinutes(time) {
+        if (typeof time === 'number') {
+          return Math.round(time * 24 * 60);
+        }
+        if (time instanceof Date) {
+          return time.getHours() * 60 + time.getMinutes();
+        }
+        if (typeof time === 'string' && time.includes(':')) {
+          const parts = time.split(':');
+          return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+        }
+        return null;
+      }
+
+      function timesOverlap(s1, s2) {
+        if (!s1.startTime || !s1.endTime || !s2.startTime || !s2.endTime) return false;
+        const start1 = toMinutes(s1.startTime);
+        const end1 = toMinutes(s1.endTime);
+        const start2 = toMinutes(s2.startTime);
+        const end2 = toMinutes(s2.endTime);
+        if (start1 === null || end1 === null || start2 === null || end2 === null) return false;
+        return start1 < end2 && start2 < end1;
+      }
+
+      const sectionToBundleIndex = {};
+      detectedBundles.forEach((b, idx) => {
+        b.sections.forEach(s => {
+          sectionToBundleIndex[s.id] = idx;
+        });
+      });
+
+      const flaggedIssues = new Set();
+
+      for (let i = 0; i < inPersonSections.length; i++) {
+        for (let j = i + 1; j < inPersonSections.length; j++) {
+          const s1 = inPersonSections[i];
+          const s2 = inPersonSections[j];
+
+          if (assignedSections.has(s1.id) && assignedSections.has(s2.id)) {
+            if (sectionToBundleIndex[s1.id] === sectionToBundleIndex[s2.id]) continue;
+          }
+
+          const sameSection = s1.section === s2.section;
+
+          if (s1.building === s2.building &&
+              s1.room === s2.room &&
+              timesOverlap(s1, s2) &&
+              datesOverlap(s1, s2)) {
+
+            const issueKey = [s1.id, s2.id].sort().join('-');
+            if (!flaggedIssues.has(issueKey)) {
+              flaggedIssues.add(issueKey);
+
+              if (sameSection) {
+                detectedFlags.push({
+                  section: s1,
+                  message: `📋 Same section appears on multiple rows (${s2.days}) - please review/consolidate`,
+                });
+                detectedFlags.push({
+                  section: s2,
+                  message: `📋 Same section appears on multiple rows (${s1.days}) - please review/consolidate`,
+                });
+              } else {
+                const d1 = s1.days?.toUpperCase() || '';
+                const d2 = s2.days?.toUpperCase() || '';
+                const dayChars = ['M', 'W', 'F', 'S', 'U'];
+                let daysShareDay = false;
+                for (const day of dayChars) {
+                  if (d1.includes(day) && d2.includes(day)) {
+                    daysShareDay = true;
+                    break;
+                  }
+                }
+                if (d1.includes('TH') && d2.includes('TH')) daysShareDay = true;
+                if (!daysShareDay) {
+                  const d1HasT = d1.replace(/TH/g, '').includes('T');
+                  const d2HasT = d2.replace(/TH/g, '').includes('T');
+                  if (d1HasT && d2HasT) daysShareDay = true;
+                }
+
+                if (daysShareDay) {
+                  detectedFlags.push({
+                    section: s1,
+                    message: `⚠️ Room conflict with ${s2.sectionName} (${s2.days} ${s2.timeRange})`,
+                  });
+                  detectedFlags.push({
+                    section: s2,
+                    message: `⚠️ Room conflict with ${s1.sectionName} (${s1.days} ${s1.timeRange})`,
+                  });
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    function detectCapacityIssues(processedSections, detectedFlags) {
+      const maxCap28Courses = [
+        'ENGL 1181', 'ENGL 1190', 'ENGL 1191',
+        'ENGL 1210', 'ENGL 1220', 'ENGL 1211', 'ENGL 1221'
+      ];
+      const maxCap10Courses = ['ENGL 1170'];
+
+      processedSections.forEach(s => {
+        if (maxCap28Courses.includes(s.course) && s.capacity > 28) {
+          detectedFlags.push({
+            section: s,
+            message: `⚠️ Capacity ${s.capacity} exceeds max of 28 for writing courses`,
+          });
+        }
+        if (maxCap10Courses.includes(s.course) && s.capacity > 10) {
+          detectedFlags.push({
+            section: s,
+            message: `⚠️ Capacity ${s.capacity} exceeds max of 10 for ENGL 1170`,
+          });
+        }
+      });
+    }
+
+    function detectSchedulingTimeIssues(processedSections, detectedFlags) {
+      const sectionsToCheck = processedSections.filter(s =>
+        ['C', 'S', 'R'].includes(s.modeCode) && s.startTime && s.endTime && s.days
+      );
+
+      const sectionCounts = {};
+      sectionsToCheck.forEach(s => {
+        sectionCounts[s.section] = (sectionCounts[s.section] || 0) + 1;
+      });
+      const splitSections = new Set(
+        Object.keys(sectionCounts).filter(sec => sectionCounts[sec] > 1)
+      );
+
+      function toMinutes(time) {
+        if (typeof time === 'number') {
+          return Math.round(time * 24 * 60);
+        }
+        if (time instanceof Date) {
+          return time.getHours() * 60 + time.getMinutes();
+        }
+        if (typeof time === 'string' && time.includes(':')) {
+          const parts = time.split(':');
+          return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+        }
+        return null;
+      }
+
+      function countMeetingDays(daysStr) {
+        if (!daysStr) return 0;
+        const days = daysStr.toUpperCase().trim();
+
+        const patterns = {
+          'MTWTHF': 5, 'MTWRF': 5, 'MTWHF': 5,
+          'MTWTH': 4, 'MTWF': 4, 'MTWR': 4, 'MWRF': 4,
+          'MWF': 3, 'TWR': 3, 'TWF': 3, 'MTW': 3, 'WRF': 3,
+          'MW': 2, 'TTH': 2, 'TR': 2, 'MF': 2, 'WF': 2, 'TW': 2, 'MR': 2, 'WTH': 2,
+          'M': 1, 'T': 1, 'W': 1, 'R': 1, 'F': 1, 'TH': 1, 'S': 1, 'U': 1,
+        };
+
+        if (patterns[days] !== undefined) {
+          return patterns[days];
+        }
+
+        let count = 0;
+        if (days.includes('M')) count++;
+        if (days.includes('W')) count++;
+        if (days.includes('F')) count++;
+        if (days.includes('S') && !days.includes('SU')) count++;
+        if (days.includes('U')) count++;
+        if (days.includes('R')) count++;
+        if (days.includes('TH') && !days.includes('R')) count++;
+        const withoutTH = days.replace(/TH/g, '');
+        if (withoutTH.includes('T')) count++;
+
+        return Math.max(count, 1);
+      }
+
+      sectionsToCheck.forEach(s => {
+        if (splitSections.has(s.section)) return;
+
+        const startMins = toMinutes(s.startTime);
+        const endMins = toMinutes(s.endTime);
+
+        if (startMins === null || endMins === null) return;
+
+        const minsPerMeeting = endMins - startMins;
+        if (minsPerMeeting <= 0) return;
+
+        const daysPerWeek = countMeetingDays(s.days);
+        if (daysPerWeek === 0) return;
+
+        const hoursPerWeek = (minsPerMeeting * daysPerWeek) / 60;
+        const credits = getCreditHours(s.course);
+        const expectedHoursPerWeek = credits * (16 / s.weeks);
+        const tolerance = 0.5;
+
+        if (hoursPerWeek < expectedHoursPerWeek - tolerance || hoursPerWeek > expectedHoursPerWeek + tolerance) {
+          detectedFlags.push({
+            section: s,
+            message: `⏱️ Scheduled ${hoursPerWeek.toFixed(1)} hrs/wk, expected ~${expectedHoursPerWeek.toFixed(1)} hrs/wk for ${credits}-credit ${s.weeks}-week course`,
+          });
+        }
+      });
+    }
+
+    // ===== SORTING =====
+    function sortSections(processedSections, detectedBundles, assignedSections) {
+      const modeOrder = { 'Online': 0, 'Hybrid': 1, 'Remote': 2, 'In-Person': 3 };
+
+      const bundleLookup = {};
+      detectedBundles.forEach((b, idx) => {
+        b.sections.forEach(s => {
+          bundleLookup[s.id] = { bundle: b, index: idx };
+        });
+      });
+
+      return [...processedSections].sort((a, b) => {
+        const aBundle = bundleLookup[a.id];
+        const bBundle = bundleLookup[b.id];
+
+        if (aBundle && !bBundle) return -1;
+        if (!aBundle && bBundle) return 1;
+
+        if (aBundle && bBundle) {
+          if (aBundle.index !== bBundle.index) return aBundle.index - bBundle.index;
+          const aCourse = a.course;
+          const bCourse = b.course;
+          if (aCourse.includes('1181') && bCourse.includes('1170')) return -1;
+          if (aCourse.includes('1170') && bCourse.includes('1181')) return 1;
+          if (aCourse.includes('2410') && bCourse.includes('2420')) return -1;
+          if (aCourse.includes('2420') && bCourse.includes('2410')) return 1;
+          return a.id - b.id;
+        }
+
+        const modeA = modeOrder[a.mode] ?? 99;
+        const modeB = modeOrder[b.mode] ?? 99;
+        if (modeA !== modeB) return modeA - modeB;
+
+        if (a.weeks !== b.weeks) return a.weeks - b.weeks;
+        if (a.course !== b.course) return a.course.localeCompare(b.course);
+        return a.section.localeCompare(b.section);
+      });
+    }
+
+    // ===== SEMESTER & CAMPUS =====
+    function determineSemesterAndCampus(processedSections) {
+      let semesterCode = '';
+      let campusName = '';
+
+      if (processedSections.length > 0) {
+        const firstSection = processedSections[0];
+        let startMonth = null;
+        let startYear = null;
+
+        if (firstSection.dateRange) {
+          const match = firstSection.dateRange.match(/^(\d{1,2})\/\d{1,2}\/(\d{2})/);
+          if (match) {
+            startMonth = parseInt(match[1], 10);
+            startYear = match[2];
+          }
+        }
+
+        if (startMonth && startYear) {
+          if (startMonth >= 8 && startMonth <= 12) {
+            semesterCode = `F${startYear}`;
+          } else if (startMonth >= 1 && startMonth <= 4) {
+            semesterCode = `W${startYear}`;
+          } else {
+            semesterCode = `SS${startYear}`;
+          }
+        }
+
+        const onlineCount = processedSections.filter(s => s.modeCode === 'O').length;
+        const isOnlineSchedule = onlineCount > processedSections.length / 2;
+
+        if (isOnlineSchedule) {
+          campusName = 'Online';
+        } else {
+          const nonOnlineSections = processedSections.filter(s => s.modeCode !== 'O');
+          const deptCounts = {};
+          nonOnlineSections.forEach(s => {
+            const dept = s.dept.toUpperCase().trim();
+            deptCounts[dept] = (deptCounts[dept] || 0) + 1;
+          });
+
+          let mostCommonDept = '';
+          let maxCount = 0;
+          for (const [dept, count] of Object.entries(deptCounts)) {
+            if (count > maxCount) {
+              maxCount = count;
+              mostCommonDept = dept;
+            }
+          }
+
+          if (mostCommonDept === 'COMMC') {
+            campusName = 'Center';
+          } else if (mostCommonDept === 'COMMS') {
+            campusName = 'South';
+          }
+        }
+      }
+
+      return { semesterCode, campusName };
+    }
+
+    // ===== UI FUNCTIONS =====
+    function showLoading(show) {
+      loadingEl.classList.toggle('visible', show);
+      if (show) {
+        uploadArea.style.display = 'none';
+      }
+    }
+
+    function showError(message) {
+      if (message) {
+        errorEl.textContent = message;
+        errorEl.classList.add('visible');
+      } else {
+        errorEl.classList.remove('visible');
+      }
+    }
+
+    function renderResults() {
+      uploadArea.style.display = 'none';
+      resultsEl.classList.add('visible');
+
+      // Render file list
+      fileListEl.innerHTML = processedFiles.map(f => {
+        const displayName = f.semesterCode && f.campusName
+          ? `${f.semesterCode}_${f.campusName}`
+          : f.semesterCode || f.filename;
+        return `
+          <div class="file-item" role="listitem">
+            <span class="file-check" aria-hidden="true">✓</span>
+            <span class="file-name">${displayName}</span>
+            <span class="file-status">— Ready (${f.processedSections.length} sections)</span>
+          </div>
+        `;
+      }).join('');
+
+      // Render flagged items
+      const allFlags = [];
+      processedFiles.forEach(f => {
+        const displayName = f.semesterCode && f.campusName
+          ? `${f.semesterCode}_${f.campusName}`
+          : f.filename;
+        f.detectedFlags.forEach(flag => {
+          allFlags.push({
+            file: displayName,
+            section: flag.section,
+            message: flag.message,
+          });
+        });
+      });
+
+      if (allFlags.length > 0) {
+        flaggedToggle.textContent = `Preview flagged items (${allFlags.length})`;
+        flaggedList.innerHTML = allFlags.map(f => `
+          <li class="flagged-item">
+            <span class="flagged-file">${f.file}</span> — 
+            ${f.section.course} ${f.section.section}: ${f.message}
+          </li>
+        `).join('');
+      } else {
+        flaggedToggle.style.display = 'none';
+      }
+    }
+
+    // ===== DOWNLOAD =====
+    async function downloadAll() {
+      downloadAllBtn.disabled = true;
+      downloadAllBtn.textContent = 'Downloading...';
+
+      for (const fileData of processedFiles) {
+        await generateAndDownloadExcel(fileData);
+        // Small delay between downloads
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+
+      downloadAllBtn.disabled = false;
+      downloadAllBtn.textContent = 'Download All Spreadsheets';
+    }
+
+    async function generateAndDownloadExcel(fileData) {
+      const {
+        processedSections,
+        detectedBundles,
+        detectedFlags,
+        assignedSections,
+        rawOriginalData,
+        semesterCode,
+        campusName,
+        headerRow,
+      } = fileData;
+
+      const workbook = new ExcelJS.Workbook();
+      const ws1 = workbook.addWorksheet('Selection Sheet');
+
+      const bundleColors = [
+        { bg: '#2d3748', text: '#90cdf4' },
+        { bg: '#3d2f5c', text: '#d6bcfa' },
+        { bg: '#2d4a3e', text: '#9ae6b4' },
+        { bg: '#4a3728', text: '#fbd38d' },
+        { bg: '#3b3058', text: '#fbb6ce' },
+        { bg: '#1e4a5a', text: '#81e6d9' },
+        { bg: '#4a2c3b', text: '#feb2b2' },
+        { bg: '#2a3f2a', text: '#c6f6d5' },
+      ];
+
+      const sectionToBundleIndex = {};
+      detectedBundles.forEach((b, idx) => {
+        b.sections.forEach((s) => {
+          sectionToBundleIndex[s.id] = idx;
+        });
+      });
+
+      const eqHoursInParens = new Set();
+      detectedBundles.forEach((bundle) => {
+        const bundleSectionIds = new Set(bundle.sections.map(s => s.id));
+        const non1170InOrder = processedSections.filter(s =>
+          bundleSectionIds.has(s.id) && s.course !== 'ENGL 1170'
+        );
+        non1170InOrder.slice(1).forEach(s => {
+          eqHoursInParens.add(s.id);
+        });
+      });
+
+      const bundleLookup = {};
+      processedSections.forEach((s, rowIdx) => {
+        const bundleIdx = sectionToBundleIndex[s.id];
+        if (bundleIdx === undefined) return;
+
+        const bundle = detectedBundles[bundleIdx];
+        const prevSection = processedSections[rowIdx - 1];
+        const prevInSameBundle = prevSection && sectionToBundleIndex[prevSection.id] === bundleIdx;
+        const nextSection = processedSections[rowIdx + 1];
+        const nextInSameBundle = nextSection && sectionToBundleIndex[nextSection.id] === bundleIdx;
+
+        bundleLookup[s.id] = {
+          id: bundle.id,
+          colorIndex: bundleIdx % bundleColors.length,
+          isFirst: !prevInSameBundle,
+          isLast: !nextInSameBundle,
+          bundleIndex: bundleIdx
+        };
+      });
+
+      const flagLookup = {};
+      detectedFlags.forEach(f => {
+        if (flagLookup[f.section.id]) {
+          flagLookup[f.section.id] += '\n' + f.message;
+        } else {
+          flagLookup[f.section.id] = f.message;
+        }
+      });
+
+      const excelBundleColors = [
+        'FFE3F2FD', 'FFF3E5F5', 'FFE8F5E9', 'FFFFF8E1',
+        'FFFCE4EC', 'FFE0F7FA', 'FFFBE9E7', 'FFF1F8E9',
+      ];
+
+      const bundleBorderColor = { argb: 'FF4472C4' };
+
+      const onlineCount = processedSections.filter(s => s.modeCode === 'O').length;
+      const isOnlineSchedule = onlineCount > processedSections.length / 2;
+
+      const sectionsToExport = isOnlineSchedule
+        ? processedSections.filter(s => s.modeCode !== 'H')
+        : processedSections;
+
+      const allColumns = [
+        { header: 'Course', key: 'course', width: 12 },
+        { header: 'Section', key: 'section', width: 9 },
+        { header: 'Mode', key: 'mode', width: 11 },
+        { header: 'Campus', key: 'campus', width: 9 },
+        { header: 'Weeks', key: 'weeks', width: 7 },
+        { header: 'Days', key: 'days', width: 7, excludeOnline: true },
+        { header: 'Time', key: 'time', width: 18, excludeOnline: true },
+        { header: 'Building', key: 'building', width: 9, excludeOnline: true },
+        { header: 'Room', key: 'room', width: 7, excludeOnline: true },
+        { header: 'Dates', key: 'dates', width: 20 },
+        { header: 'Capacity', key: 'capacity', width: 9 },
+        { header: 'Hours/Eq. Hours', key: 'eqHours', width: 15 },
+        { header: 'Bundle ID', key: 'bundleId', width: 11 },
+        { header: 'Notes', key: 'notes', width: 15 },
+        { header: 'Faculty Selection', key: 'faculty', width: 20 },
+        { header: 'Flags/Issues', key: 'flags', width: 45 },
+      ];
+
+      const activeColumns = isOnlineSchedule
+        ? allColumns.filter(col => !col.excludeOnline)
+        : allColumns;
+
+      ws1.columns = activeColumns;
+      const totalColumns = activeColumns.length;
+
+      const headerRowEl = ws1.getRow(1);
+      headerRowEl.height = 24;
+      headerRowEl.eachCell((cell) => {
+        cell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FF4472C4' }
+        };
+        cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        cell.alignment = { horizontal: 'center', vertical: 'middle' };
+        cell.border = {
+          top: { style: 'thin', color: { argb: 'FF000000' } },
+          bottom: { style: 'thin', color: { argb: 'FF000000' } },
+          left: { style: 'thin', color: { argb: 'FF000000' } },
+          right: { style: 'thin', color: { argb: 'FF000000' } }
+        };
+      });
+
+      sectionsToExport.forEach((s, idx) => {
+        const bundleInfo = bundleLookup[s.id];
+        const flag = flagLookup[s.id];
+
+        let notesText = '';
+        if (s.mode === 'Hybrid') notesText = '[HYBRID]';
+        if (s.mode === 'Remote') notesText = '[REMOTE]';
+
+        const flagsText = flag || '';
+
+        const eqHoursValue = getEquatedHours(s.course);
+        const eqHoursDisplay = eqHoursInParens.has(s.id)
+          ? `(${eqHoursValue})`
+          : eqHoursValue;
+
+        const row = ws1.addRow({
+          course: s.course,
+          section: s.section,
+          mode: s.mode,
+          campus: s.campus,
+          weeks: s.weeks,
+          days: s.days,
+          time: s.timeRange,
+          building: s.building,
+          room: s.room,
+          dates: s.dateRange,
+          capacity: s.capacity,
+          eqHours: eqHoursDisplay,
+          bundleId: bundleInfo ? bundleInfo.id : '',
+          notes: notesText,
+          faculty: '',
+          flags: flagsText,
+        });
+
+        const flagLineCount = flagsText ? flagsText.split('\n').length : 0;
+        row.height = Math.max(22, 18 * flagLineCount);
+
+        const fillColor = bundleInfo
+          ? excelBundleColors[bundleInfo.colorIndex % excelBundleColors.length]
+          : 'FFFFFFFF';
+
+        const getColNum = (key) => activeColumns.findIndex(c => c.key === key) + 1;
+        const weeksCol = getColNum('weeks');
+        const capacityCol = getColNum('capacity');
+        const eqHoursCol = getColNum('eqHours');
+        const notesCol = getColNum('notes');
+        const flagsCol = getColNum('flags');
+
+        row.eachCell((cell, colNumber) => {
+          cell.fill = {
+            type: 'pattern',
+            pattern: 'solid',
+            fgColor: { argb: fillColor }
+          };
+
+          cell.alignment = { vertical: 'middle' };
+
+          if ([weeksCol, capacityCol, eqHoursCol].includes(colNumber)) {
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+          }
+
+          if (colNumber === flagsCol) {
+            cell.alignment = { vertical: 'top', wrapText: true };
+          }
+
+          if (colNumber === notesCol && notesText) {
+            cell.font = { bold: true };
+          }
+
+          cell.border = {
+            top: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+            bottom: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+            left: { style: 'thin', color: { argb: 'FFD0D0D0' } },
+            right: { style: 'thin', color: { argb: 'FFD0D0D0' } }
+          };
+
+          if (bundleInfo) {
+            if (bundleInfo.isFirst) {
+              cell.border.top = { style: 'medium', color: bundleBorderColor };
+            }
+            if (bundleInfo.isLast) {
+              cell.border.bottom = { style: 'medium', color: bundleBorderColor };
+            }
+            if (colNumber === 1) {
+              cell.border.left = { style: 'medium', color: bundleBorderColor };
+            }
+            if (colNumber === totalColumns) {
+              cell.border.right = { style: 'medium', color: bundleBorderColor };
+            }
+          }
+        });
+      });
+
+      // Sheet 2: Original Data
+      const ws2 = workbook.addWorksheet('Original Data');
+      rawOriginalData.forEach((row, rowIndex) => {
+        const excelRow = ws2.addRow(row);
+        excelRow.height = 18;
+      });
+
+      const dataRows = rawOriginalData.slice(headerRow || 0);
+      ws2.columns.forEach((column, colIndex) => {
+        let maxLength = 5;
+        dataRows.forEach(row => {
+          const cellValue = row[colIndex];
+          if (cellValue) {
+            const cellLength = String(cellValue).length;
+            if (cellLength > maxLength) {
+              maxLength = Math.min(cellLength, 40);
+            }
+          }
+        });
+        column.width = maxLength + 1;
+      });
+
+      // Generate filename
+      let filename = 'Faculty_Selection_Sheet.xlsx';
+      if (semesterCode && campusName) {
+        filename = `${semesterCode}_${campusName}_Faculty_Selection_Sheet.xlsx`;
+      } else if (semesterCode) {
+        filename = `${semesterCode}_Faculty_Selection_Sheet.xlsx`;
+      } else if (campusName) {
+        filename = `${campusName}_Faculty_Selection_Sheet.xlsx`;
+      }
+
+      // Download
+      const buffer = await workbook.xlsx.writeBuffer();
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>

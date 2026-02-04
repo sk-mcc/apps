@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuickPoll Display</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/wordcloud2.js/1.1.1/wordcloud2.min.js"></script>
+</head>
+<body>
+  <!-- Auth check - content hidden until verified -->
+  <div id="authLoading" class="page-centered">
+    <div class="loading">
+      <div class="spinner"></div>
+    </div>
+  </div>
+
+  <div id="mainContent" class="display-page hidden">
+    <!-- Loading State -->
+    <div id="loadingState" class="display-main">
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>Loading session...</p>
+      </div>
+    </div>
+
+    <!-- Error State -->
+    <div id="errorState" class="display-main hidden">
+      <div class="text-center">
+        <p class="text-xl text-error mb-lg" id="displayError">Session not found</p>
+        <a href="instructor.html" class="btn btn--primary">Back to Instructor Panel</a>
+      </div>
+    </div>
+
+    <!-- Waiting for Students -->
+    <div id="waitingState" class="display-main hidden">
+      <div class="text-center">
+        <p class="text-muted mb-md">Join at</p>
+        <p class="text-xl mb-lg" id="joinUrlDisplay"></p>
+
+        <div class="qr-container mb-xl" id="displayQrCode" style="margin: 0 auto;"></div>
+
+        <p class="text-muted mb-sm">Session Code</p>
+        <div class="session-code mb-xl" id="displaySessionCode">----</div>
+
+        <div class="connected-count">
+          <span class="connected-count__number" id="waitingConnectedCount">0</span> students connected
+        </div>
+      </div>
+    </div>
+
+    <!-- Question Active -->
+    <div id="questionState" class="display-main hidden">
+      <div class="display-stats">
+        <span>Question <span id="displayQuestionNum">1</span> of <span id="displayTotalQuestions">1</span></span>
+        <span><span id="responseCount">0</span> of <span id="connectedCountQuestion">0</span> responded</span>
+      </div>
+
+      <p class="display-question" id="displayQuestionText"></p>
+
+      <div class="visualization-container">
+        <!-- Word Cloud (Open Response) -->
+        <div id="wordCloudViz" class="word-cloud-container hidden">
+          <canvas id="wordCloudCanvas"></canvas>
+        </div>
+
+        <!-- Bar Chart (Multiple Choice) -->
+        <div id="barChartViz" class="bar-chart hidden"></div>
+
+        <!-- Histogram (Rating Scale) -->
+        <div id="histogramViz" class="histogram hidden">
+          <div class="histogram__average">
+            Average: <span class="histogram__average-value" id="ratingAverage">--</span>
+          </div>
+          <div class="histogram__bars" id="histogramBars"></div>
+        </div>
+
+        <!-- Empty state for no responses yet -->
+        <div id="noResponsesYet" class="text-center text-muted hidden">
+          <p class="text-xl">Waiting for responses...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Session Complete -->
+    <div id="completeState" class="display-main hidden">
+      <div class="text-center">
+        <p class="text-display mb-lg">Session Complete</p>
+        <p class="text-xl text-muted">Thanks for participating!</p>
+      </div>
+    </div>
+
+    <!-- Control Bar -->
+    <div id="controlBar" class="control-bar always-visible">
+      <button type="button" id="beginBtn" class="btn btn--primary btn--large hidden">
+        Begin Session
+      </button>
+      <button type="button" id="closeResponsesBtn" class="btn btn--large hidden">
+        Close Responses
+      </button>
+      <button type="button" id="nextQuestionBtn" class="btn btn--primary btn--large hidden">
+        Next Question
+      </button>
+      <button type="button" id="endSessionBtn" class="btn btn--danger btn--large hidden">
+        End Session
+      </button>
+    </div>
+
+    <!-- End Session Confirmation Modal -->
+    <div id="endSessionModal" class="modal-backdrop">
+      <div class="modal">
+        <h2 class="modal__title">End Session?</h2>
+        <p>This will end the session for all students. This action cannot be undone.</p>
+        <div class="modal__actions">
+          <button type="button" id="cancelEndBtn" class="btn">Cancel</button>
+          <button type="button" id="confirmEndBtn" class="btn btn--danger">End Session</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { requireAuth } from './js/auth.js';
+
+    // Check authentication before showing content
+    requireAuth().then(user => {
+      if (user) {
+        document.getElementById('authLoading').classList.add('hidden');
+        document.getElementById('mainContent').classList.remove('hidden');
+        // Load display module
+        import('./js/display.js');
+      }
+    });
+  </script>
+</body>
+</html>

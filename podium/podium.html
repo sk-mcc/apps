@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classroom Podium</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💻</text></svg>">
+    <style>
+        :root {
+            --bg-primary: #050a10;
+            --bg-gradient-start: #111a2e;
+            --bg-glass: rgba(13, 17, 23, 0.6);
+            --color-accent: #38bdf8;
+            --color-accent-bright: #7dd3fc;
+            --color-text: #e6edf3;
+            --color-text-dim: #94a3b8;
+            --border-glass: rgba(56, 189, 248, 0.2);
+            --shadow-glow: rgba(56, 189, 248, 0.2);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            font-weight: 300;
+            color: var(--color-text);
+            background-color: var(--bg-primary);
+            background-image: radial-gradient(circle at 0% 0%, var(--bg-gradient-start) 0%, var(--bg-primary) 60%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Glass Card */
+        .glass-card {
+            background: var(--bg-glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border-glass);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .card-header {
+            font-size: 1.1rem;
+            color: var(--color-accent);
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            border-bottom: 1px solid var(--border-glass);
+            padding-bottom: 8px;
+        }
+
+        .card-list {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: var(--color-text);
+            list-style-position: inside;
+            padding-left: 5px;
+        }
+
+        .card-list li {
+            margin-bottom: 8px;
+        }
+
+        .card-list li.sub-bullet {
+            margin-left: 1.5em;
+            list-style-type: circle;
+            color: var(--color-text-dim);
+            font-size: 0.95em;
+        }
+
+        /* Buttons */
+        .btn {
+            background: transparent;
+            color: rgba(56, 189, 248, 0.7);
+            border: 1px solid rgba(56, 189, 248, 0.3);
+            border-radius: 4px;
+            padding: 10px 20px;
+            font-weight: 300;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            border-color: var(--color-accent);
+            color: #ffffff;
+            box-shadow: 0 0 10px var(--shadow-glow);
+        }
+
+        .btn-primary {
+            background: rgba(56, 189, 248, 0.1);
+            border-color: var(--color-accent);
+            color: var(--color-accent);
+            width: 100%;
+            padding: 15px;
+            font-size: 1em;
+        }
+
+        .btn-primary:hover {
+            background: rgba(56, 189, 248, 0.2);
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--color-text);
+            font-size: 0.95rem;
+        }
+
+        select, input, textarea {
+            width: 100%;
+            padding: 12px;
+            background: rgba(13, 17, 23, 0.8);
+            border: 1px solid var(--border-glass);
+            border-radius: 6px;
+            color: var(--color-text);
+            font-family: inherit;
+            font-size: 1rem;
+        }
+
+        select:focus, input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--color-accent);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        input[type="number"] {
+            width: 100px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        /* Layout */
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .two-col {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Dashboard Styles */
+        .dashboard-title {
+            font-size: 5em;
+            font-weight: 200;
+            color: #ffffff;
+            margin-bottom: 0;
+            letter-spacing: -1px;
+            text-shadow: 0 0 30px var(--shadow-glow);
+        }
+
+        .dashboard-subtitle {
+            font-size: 2em;
+            color: var(--color-accent);
+            margin-bottom: 30px;
+            font-weight: 500;
+            letter-spacing: 1px;
+        }
+
+        .tfw-notice {
+            background: linear-gradient(90deg, rgba(3, 105, 161, 0.2) 0%, rgba(3, 105, 161, 0.05) 100%);
+            border-left: 4px solid #0284c7;
+            color: #e0f2fe;
+            padding: 20px;
+            margin-top: 10px;
+            border-radius: 0 8px 8px 0;
+            font-size: 1.1rem;
+        }
+
+        .tfw-notice strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .event-day {
+            color: #38bdf8;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        .no-events {
+            color: #94a3b8;
+            font-style: italic;
+        }
+
+        .welcome-left {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .welcome-buttons {
+            margin-top: auto;
+            padding-top: 4rem;
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+        }
+
+        .welcome-buttons .btn,
+        .btn-small {
+            font-size: 0.8em;
+            padding: 8px 16px;
+            opacity: 0.65;
+            width: auto;
+        }
+
+        .welcome-buttons .btn:hover,
+        .btn-small:hover {
+            opacity: 1;
+        }
+
+        .welcome-buttons .btn-bright {
+            opacity: 0.85;
+            border-color: var(--color-accent);
+            color: var(--color-accent);
+        }
+
+        /* Screen visibility */
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        /* Setup screen */
+        #setup-screen h2 {
+            color: var(--color-text);
+            font-weight: 400;
+            margin-bottom: 1.5rem;
+        }
+
+        #setup-screen h3 {
+            color: var(--color-text);
+            font-weight: 400;
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+        }
+
+        /* Focus Mode Styles */
+        #focus-screen {
+            min-height: 100vh;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            padding: 2rem;
+        }
+
+        #focus-screen.active {
+            display: flex;
+        }
+
+        .focus-header {
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 1rem;
+        }
+
+        .focus-prompt {
+            font-size: clamp(1.8em, 3vw, 2.5em);
+            color: #ffffff;
+            text-align: left;
+            margin-top: 8vh;
+            margin-bottom: 10vh;
+            font-weight: 300;
+            width: 80%;
+            line-height: 1.3;
+            transition: color 0.5s ease;
+        }
+
+        .focus-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            width: 90%;
+            max-width: 1400px;
+        }
+
+        @media (max-width: 900px) {
+            .focus-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .focus-card {
+            background: rgba(13, 17, 23, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            border-radius: 12px;
+            padding: 40px;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.5s ease;
+        }
+
+        .focus-card .card-header {
+            font-size: clamp(1.2em, 2vw, 1.5em);
+        }
+
+        .focus-card ul {
+            font-size: clamp(1.2em, 2vw, 1.4em);
+            font-weight: 300;
+            color: #cde2f7;
+            line-height: 1.8;
+            padding-left: 25px;
+        }
+
+        .focus-card ul li {
+            margin-bottom: 12px;
+        }
+
+        #timer-display {
+            font-size: clamp(1.4em, 2.1vw, 1.6em);
+            font-weight: 300;
+            color: #cde2f7;
+            text-align: center;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+            margin-top: 40px;
+            transition: all 0.5s ease;
+        }
+
+        #progress-container {
+            width: 100%;
+            background-color: rgba(56, 189, 248, 0.15);
+            height: 6px;
+            border-radius: 3px;
+            margin-top: 30px;
+            overflow: hidden;
+        }
+
+        #progress-bar {
+            height: 100%;
+            background-color: #0ea5e9;
+            width: 0%;
+            transition: width 0.3s linear;
+        }
+
+        /* Completion animation */
+        @keyframes gentle-pulse {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(134, 239, 172, 0.3),
+                            0 0 40px rgba(134, 239, 172, 0.1);
+                border-color: rgba(134, 239, 172, 0.5);
+            }
+            50% {
+                box-shadow: 0 0 40px rgba(134, 239, 172, 0.5),
+                            0 0 80px rgba(134, 239, 172, 0.2);
+                border-color: rgba(134, 239, 172, 0.8);
+            }
+        }
+
+        .focus-card.complete {
+            border-color: rgba(134, 239, 172, 0.5);
+            background: rgba(13, 17, 23, 0.85);
+            animation: gentle-pulse 2s ease-in-out infinite;
+        }
+
+        .focus-card.complete .card-header {
+            color: #86efac;
+            border-bottom-color: rgba(134, 239, 172, 0.3);
+        }
+
+        .focus-card.complete #timer-display {
+            color: #86efac;
+            font-size: clamp(2.2em, 4vw, 3em);
+            text-shadow: 0 0 30px rgba(134, 239, 172, 0.5);
+        }
+
+        .focus-card.complete #progress-bar {
+            background-color: #22c55e;
+        }
+
+        .focus-prompt.complete {
+            color: #86efac;
+            text-shadow: 0 0 30px rgba(134, 239, 172, 0.4);
+        }
+    </style>
+</head>
+<body>
+
+<!-- SETUP SCREEN -->
+<div id="setup-screen" class="screen active">
+    <div class="container">
+        <h2>Podium Setup</h2>
+        <div class="two-col">
+            <div>
+                <div class="form-group">
+                    <label for="class-select">Select Class</label>
+                    <select id="class-select"></select>
+                </div>
+                <div class="form-group">
+                    <label for="agenda-input">Today's Agenda</label>
+                    <textarea id="agenda-input" placeholder="Enter each agenda item on a new line"></textarea>
+                </div>
+            </div>
+            <div>
+                <h3>Tech-Free Writing</h3>
+                <div class="form-group">
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="tfw-checkbox" checked>
+                        <label for="tfw-checkbox" style="margin-bottom: 0;">Is today a TFW day?</label>
+                    </div>
+                </div>
+                <div id="tfw-options">
+                    <div class="form-group">
+                        <label for="tfw-prompt">Writing Prompt</label>
+                        <textarea id="tfw-prompt"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="tfw-minutes">Duration (minutes)</label>
+                        <input type="number" id="tfw-minutes" min="1" max="30">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <br>
+        <button class="btn btn-primary" onclick="launchWelcome()">Launch Welcome Screen</button>
+    </div>
+</div>
+
+<!-- WELCOME SCREEN -->
+<div id="welcome-screen" class="screen">
+    <div class="container">
+        <div class="two-col">
+            <div class="welcome-left">
+                <div class="dashboard-title">Welcome</div>
+                <div class="dashboard-subtitle" id="date-display"></div>
+                <div id="tfw-notice-container"></div>
+                <div class="welcome-buttons" id="welcome-buttons">
+                    <button class="btn" onclick="showScreen('setup')">Edit Setup</button>
+                </div>
+            </div>
+            <div>
+                <div class="glass-card">
+                    <div class="card-header">Today's Agenda</div>
+                    <ul class="card-list" id="agenda-display"></ul>
+                </div>
+                <div class="glass-card">
+                    <div class="card-header">Upcoming</div>
+                    <div id="upcoming-display"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FOCUS SCREEN -->
+<div id="focus-screen" class="screen">
+    <div class="focus-header">
+        <button class="btn" onclick="exitFocus()">Exit</button>
+    </div>
+    <div class="focus-prompt" id="focus-prompt-display"></div>
+    <div class="focus-grid">
+        <div class="focus-card">
+            <div class="card-header">Reminders</div>
+            <ul>
+                <li>Put all technology away.</li>
+                <li>Keep your pen moving.</li>
+                <li>If stuck, write "I am stuck" or "I'm not sure what to write" until you get unstuck.</li>
+            </ul>
+        </div>
+        <div class="focus-card" id="timer-card">
+            <div class="card-header">Time Remaining</div>
+            <div id="timer-display">Loading...</div>
+            <div id="progress-container">
+                <div id="progress-bar"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// === CONFIGURATION ===
+const CLASS_CALENDARS = {
+    "ENGL 1170 (Mondays)": "https://calendar.google.com/calendar/ical/96bccc53c2e45d1bd36c7075b4c7421cfcfe6789f9f451e926f18e598c42e1a4%40group.calendar.google.com/public/basic.ics",
+    "ENGL 1170 (Tuesdays)": "https://calendar.google.com/calendar/ical/f3df4847b18f876bda1420bdce9d5710558f73557203b228f5775fb4768ccad6%40group.calendar.google.com/public/basic.ics",
+    "ENGL 1181 (Mon/Wed)": "https://calendar.google.com/calendar/ical/0157024f1bbf32b1bda8275d5fff0a01e688d60921bb75e13b0d994d429a20fe%40group.calendar.google.com/public/basic.ics",
+    "ENGL 1181 (Tues/Thurs)": "https://calendar.google.com/calendar/ical/1ba2d62ad576db0224203216cfccbd583108a8ed3ddd170ca4c1aee9067d8fac%40group.calendar.google.com/public/basic.ics",
+    "ENGL 1181 (Tuesdays—Hybrid)": "https://calendar.google.com/calendar/ical/80c43857f8868cc0830f775213c16804819b2663a63a4785b5a91ae183fda585%40group.calendar.google.com/public/basic.ics",
+    "ENGL 1190 (Mon/Wed)": "https://calendar.google.com/calendar/ical/5ccac57e3b214413edfd731d32b4be4514c614f17bc034f363e61107d16c75f6%40group.calendar.google.com/public/basic.ics",
+    "ENGL 1190 (Tues/Thurs)": "https://calendar.google.com/calendar/ical/39ba7ac909903e1b6b3698153819e6a813638bb279c7c14295dec343b7b9464e%40group.calendar.google.com/public/basic.ics"
+};
+
+const DEFAULT_TFW_PROMPT = "Write about whatever is in your head right now—stress, lunch plans, traffic, or your to-do list.";
+const DEFAULT_TFW_MINUTES = 7;
+const DEFAULT_AGENDA = "Freewrite\nTopic\nTopic";
+
+// CORS proxy for fetching calendar data
+const CORS_PROXY = "https://corsproxy.io/?";
+
+// === STATE ===
+let state = {
+    selectedClass: Object.keys(CLASS_CALENDARS)[0],
+    agenda: DEFAULT_AGENDA,
+    isTfw: true,
+    tfwPrompt: DEFAULT_TFW_PROMPT,
+    tfwMinutes: DEFAULT_TFW_MINUTES
+};
+
+let timerInterval = null;
+
+// === INITIALIZATION ===
+document.addEventListener('DOMContentLoaded', () => {
+    // Populate class dropdown
+    const classSelect = document.getElementById('class-select');
+    Object.keys(CLASS_CALENDARS).forEach(className => {
+        const option = document.createElement('option');
+        option.value = className;
+        option.textContent = className;
+        classSelect.appendChild(option);
+    });
+
+    // Set default values
+    document.getElementById('agenda-input').value = DEFAULT_AGENDA;
+    document.getElementById('tfw-prompt').value = DEFAULT_TFW_PROMPT;
+    document.getElementById('tfw-minutes').value = DEFAULT_TFW_MINUTES;
+
+    // TFW checkbox toggle
+    document.getElementById('tfw-checkbox').addEventListener('change', (e) => {
+        document.getElementById('tfw-options').style.display = e.target.checked ? 'block' : 'none';
+    });
+});
+
+// === SCREEN MANAGEMENT ===
+function showScreen(screenName) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(`${screenName}-screen`).classList.add('active');
+}
+
+// === SETUP -> WELCOME ===
+function launchWelcome() {
+    // Save state from form
+    state.selectedClass = document.getElementById('class-select').value;
+    state.agenda = document.getElementById('agenda-input').value;
+    state.isTfw = document.getElementById('tfw-checkbox').checked;
+    state.tfwPrompt = document.getElementById('tfw-prompt').value;
+    state.tfwMinutes = parseInt(document.getElementById('tfw-minutes').value) || DEFAULT_TFW_MINUTES;
+
+    // Update welcome screen
+    updateWelcomeScreen();
+    showScreen('welcome');
+}
+
+function updateWelcomeScreen() {
+    // Set date
+    const now = new Date();
+    const options = { weekday: 'long', month: 'long', day: 'numeric' };
+    document.getElementById('date-display').textContent = now.toLocaleDateString('en-US', options);
+
+    // Set agenda (supports sub-bullets with - prefix)
+    const agendaList = document.getElementById('agenda-display');
+    agendaList.innerHTML = '';
+    state.agenda.split('\n').filter(line => line.trim()).forEach(item => {
+        const trimmed = item.trim();
+        const li = document.createElement('li');
+        if (trimmed.startsWith('-')) {
+            li.textContent = trimmed.substring(1).trim();
+            li.classList.add('sub-bullet');
+        } else {
+            li.textContent = trimmed;
+        }
+        agendaList.appendChild(li);
+    });
+
+    // TFW notice and buttons
+    const tfwContainer = document.getElementById('tfw-notice-container');
+    const welcomeButtons = document.getElementById('welcome-buttons');
+    if (state.isTfw) {
+        tfwContainer.innerHTML = `
+            <div class="tfw-notice">
+                <strong>Tech-Free Writing Today</strong>
+                Have your journal and pen ready.
+            </div>
+        `;
+        welcomeButtons.innerHTML = `
+            <button class="btn btn-bright" onclick="startFocus()">Start Writing Session</button>
+            <button class="btn" onclick="showScreen('setup')">Edit Setup</button>
+        `;
+    } else {
+        tfwContainer.innerHTML = '';
+        welcomeButtons.innerHTML = `
+            <button class="btn" onclick="showScreen('setup')">Edit Setup</button>
+        `;
+    }
+
+    // Fetch calendar events
+    fetchCalendarEvents();
+}
+
+// === CALENDAR FETCHING ===
+async function fetchCalendarEvents() {
+    const upcomingDiv = document.getElementById('upcoming-display');
+    upcomingDiv.innerHTML = '<div class="no-events">Loading events...</div>';
+
+    const calUrl = CLASS_CALENDARS[state.selectedClass];
+    if (!calUrl) {
+        upcomingDiv.innerHTML = '<div class="no-events">No calendar configured.</div>';
+        return;
+    }
+
+    try {
+        const response = await fetch(CORS_PROXY + encodeURIComponent(calUrl));
+        if (!response.ok) throw new Error('Failed to fetch calendar');
+
+        const icsText = await response.text();
+        const events = parseICS(icsText);
+
+        if (events.length === 0) {
+            upcomingDiv.innerHTML = '<div class="no-events">No upcoming deadlines found.</div>';
+        } else {
+            upcomingDiv.innerHTML = '<ul class="card-list">' +
+                events.map(e => `<li>${e.name}<span class="event-day">(${e.dayLabel})</span></li>`).join('') +
+                '</ul>';
+        }
+    } catch (error) {
+        console.error('Calendar fetch error:', error);
+        upcomingDiv.innerHTML = '<div class="no-events">Could not fetch calendar.</div>';
+    }
+}
+
+function parseICS(icsText) {
+    const events = [];
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    const maxDate = new Date(now);
+    maxDate.setDate(maxDate.getDate() + 7);
+
+    // Split into VEVENT blocks
+    const eventBlocks = icsText.split('BEGIN:VEVENT');
+
+    for (let i = 1; i < eventBlocks.length; i++) {
+        const block = eventBlocks[i];
+        const endIdx = block.indexOf('END:VEVENT');
+        const eventData = block.substring(0, endIdx);
+
+        // Extract SUMMARY (event name)
+        const summaryMatch = eventData.match(/SUMMARY:(.+?)(?:\r?\n)/);
+        if (!summaryMatch) continue;
+        // Unescape ICS special characters (\, \; \\)
+        const name = summaryMatch[1].trim()
+            .replace(/\\,/g, ',')
+            .replace(/\\;/g, ';')
+            .replace(/\\\\/g, '\\');
+
+        // Extract DTSTART
+        const dateMatch = eventData.match(/DTSTART[^:]*:(\d{8})/);
+        if (!dateMatch) continue;
+
+        const dateStr = dateMatch[1];
+        const year = parseInt(dateStr.substring(0, 4));
+        const month = parseInt(dateStr.substring(4, 6)) - 1;
+        const day = parseInt(dateStr.substring(6, 8));
+        const eventDate = new Date(year, month, day);
+
+        // Check if within range
+        if (eventDate >= now && eventDate <= maxDate) {
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            let dayLabel;
+            if (eventDate.getTime() === today.getTime()) {
+                dayLabel = 'Today';
+            } else {
+                dayLabel = eventDate.toLocaleDateString('en-US', { weekday: 'short' });
+            }
+
+            events.push({ name, date: eventDate, dayLabel });
+        }
+    }
+
+    // Sort by date
+    events.sort((a, b) => a.date - b.date);
+    return events;
+}
+
+// === FOCUS MODE ===
+function startFocus() {
+    document.getElementById('focus-prompt-display').textContent = state.tfwPrompt;
+    document.getElementById('focus-prompt-display').classList.remove('complete');
+    document.getElementById('timer-card').classList.remove('complete');
+    document.getElementById('progress-bar').style.width = '0%';
+
+    showScreen('focus');
+    startTimer();
+}
+
+function exitFocus() {
+    if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+    }
+    showScreen('welcome');
+}
+
+function startTimer() {
+    const totalSeconds = state.tfwMinutes * 60;
+    let remaining = totalSeconds;
+    let completed = false;
+
+    const timerEl = document.getElementById('timer-display');
+    const barEl = document.getElementById('progress-bar');
+    const timerCard = document.getElementById('timer-card');
+    const promptEl = document.getElementById('focus-prompt-display');
+
+    function getFuzzyTime(seconds) {
+        const minutes = seconds / 60;
+        if (minutes >= 5) return "About " + Math.round(minutes) + " minutes";
+        if (minutes >= 3.5) return "About 4 minutes";
+        if (minutes >= 2.75) return "About 3 minutes";
+        if (minutes >= 2.25) return "About 2.5 minutes";
+        if (minutes >= 1.75) return "About 2 minutes";
+        if (minutes >= 1.25) return "About 1.5 minutes";
+        if (minutes >= 0.75) return "About 1 minute";
+        if (minutes > 0) return "< 1 minute";
+        return "Time to wrap up";
+    }
+
+    // Initial display
+    timerEl.textContent = getFuzzyTime(remaining);
+
+    timerInterval = setInterval(() => {
+        remaining--;
+        timerEl.textContent = getFuzzyTime(remaining);
+
+        const progress = ((totalSeconds - remaining) / totalSeconds) * 100;
+        barEl.style.width = progress + "%";
+
+        if (remaining <= 0 && !completed) {
+            completed = true;
+            clearInterval(timerInterval);
+            timerInterval = null;
+
+            timerEl.textContent = "Time to wrap up";
+            timerCard.classList.add('complete');
+            promptEl.classList.add('complete');
+
+            playGentleChime();
+        }
+    }, 1000);
+}
+
+function playGentleChime() {
+    try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playChord(freq1, freq2, delay, duration, volume) {
+            setTimeout(() => {
+                const osc1 = audioCtx.createOscillator();
+                const osc2 = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+
+                osc1.frequency.value = freq1;
+                osc2.frequency.value = freq2;
+                osc1.type = 'sine';
+                osc2.type = 'sine';
+
+                osc1.connect(gainNode);
+                osc2.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+
+                const now = audioCtx.currentTime;
+                gainNode.gain.setValueAtTime(0, now);
+                gainNode.gain.linearRampToValueAtTime(volume, now + 0.1);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + duration);
+
+                osc1.start(now);
+                osc2.start(now);
+                osc1.stop(now + duration);
+                osc2.stop(now + duration);
+            }, delay);
+        }
+
+        // First chime (C5 + E5)
+        playChord(523.25, 659.25, 0, 1.5, 0.15);
+        // Second chime (E5 + G5)
+        playChord(659.25, 783.99, 600, 2, 0.12);
+
+    } catch (e) {
+        console.log("Web Audio not supported:", e);
+    }
+}
+</script>
+
+</body>
+</html>

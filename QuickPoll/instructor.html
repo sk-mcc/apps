@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Instructor Panel - QuickPoll</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+</head>
+<body>
+  <!-- Auth check - content hidden until verified -->
+  <div id="authLoading" class="page-centered">
+    <div class="loading">
+      <div class="spinner"></div>
+    </div>
+  </div>
+
+  <div id="mainContent" class="container hidden">
+    <header class="flex justify-between items-center mb-xl">
+      <h1>Instructor Panel</h1>
+      <div class="flex gap-sm">
+        <button type="button" id="logoutBtn" class="btn btn--ghost btn--small">Sign Out</button>
+        <a href="index.html" class="btn btn--ghost">Back to Home</a>
+      </div>
+    </header>
+
+    <!-- Session Setup (shown when no active session) -->
+    <section id="sessionSetup" class="card container--narrow" style="margin: 0 auto;">
+      <div class="card__header">
+        <h2 class="card__title">Start a Session</h2>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="quizSelect">Select a Quiz</label>
+        <select id="quizSelect" class="form-select">
+          <option value="">-- Choose a quiz --</option>
+        </select>
+      </div>
+
+      <div id="quizPreview" class="hidden mb-lg">
+        <h3 class="text-lg mb-sm" id="previewTitle"></h3>
+        <p class="text-muted" id="previewInfo"></p>
+      </div>
+
+      <div id="setupError" class="message message--error hidden"></div>
+
+      <button type="button" id="startSessionBtn" class="btn btn--primary btn--large btn--block" disabled>
+        Start Session
+      </button>
+    </section>
+
+    <!-- Active Session (shown when session is running) -->
+    <section id="activeSession" class="hidden">
+      <div class="instructor-layout">
+        <!-- Session Info -->
+        <div class="card">
+          <div class="session-info">
+            <p class="text-muted">Session Code</p>
+            <div class="session-code" id="sessionCodeDisplay">----</div>
+            <button type="button" id="copyCodeBtn" class="btn btn--small">Copy Code</button>
+
+            <div class="qr-container" id="qrCode"></div>
+            <p class="text-sm text-muted" id="joinUrl"></p>
+
+            <div class="connected-count mt-lg">
+              <span class="connected-count__number" id="connectedCount">0</span> students connected
+            </div>
+          </div>
+        </div>
+
+        <!-- Session Controls -->
+        <div class="card">
+          <div class="card__header">
+            <h2 class="card__title">Session Controls</h2>
+          </div>
+
+          <div class="mb-lg">
+            <p class="text-muted mb-sm">Current Quiz</p>
+            <p class="text-lg font-semibold" id="activeQuizTitle">--</p>
+          </div>
+
+          <div class="mb-lg">
+            <p class="text-muted mb-sm">Progress</p>
+            <p class="text-lg">
+              Question <span id="currentQuestionNum">0</span> of <span id="totalQuestions">0</span>
+            </p>
+          </div>
+
+          <div class="mb-lg">
+            <p class="text-muted mb-sm">Status</p>
+            <p class="text-lg" id="sessionStatus">Waiting to start</p>
+          </div>
+
+          <div class="btn-group btn-group--vertical">
+            <a href="#" id="openDisplayBtn" class="btn btn--primary btn--large btn--block" target="_blank">
+              Open Display Page
+            </a>
+            <button type="button" id="endSessionBtn" class="btn btn--danger btn--block">
+              End Session
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- End Session Confirmation Modal -->
+    <div id="endSessionModal" class="modal-backdrop">
+      <div class="modal">
+        <h2 class="modal__title">End Session?</h2>
+        <p>This will end the session for all students. This action cannot be undone.</p>
+        <div class="modal__actions">
+          <button type="button" id="cancelEndBtn" class="btn">Cancel</button>
+          <button type="button" id="confirmEndBtn" class="btn btn--danger">End Session</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { requireAuth, logout } from './js/auth.js';
+
+    // Check authentication before showing content
+    requireAuth().then(user => {
+      if (user) {
+        document.getElementById('authLoading').classList.add('hidden');
+        document.getElementById('mainContent').classList.remove('hidden');
+
+        // Setup logout button
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+          await logout();
+          window.location.href = 'index.html';
+        });
+
+        // Load instructor module
+        import('./js/instructor.js');
+      }
+    });
+  </script>
+</body>
+</html>
