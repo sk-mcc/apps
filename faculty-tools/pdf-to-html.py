@@ -248,6 +248,76 @@ def merge_consecutive_headings(elements):
     return merged
 
 
+def detect_list_type(text):
+    """Detect if text starts with a list marker and return the type"""
+    stripped = text.strip()
+
+    # Bulleted list markers
+    if stripped.startswith('•') or stripped.startswith('●'):
+        return 'bullet', stripped[1:].strip()
+    if stripped.startswith('-') and len(stripped) > 1 and stripped[1] == ' ':
+        return 'bullet', stripped[2:].strip()
+
+    # Sub-list markers (hollow circles, arrows, etc.)
+    if stripped.startswith('○') or stripped.startswith('◦') or stripped.startswith('▪'):
+        return 'sub-bullet', stripped[1:].strip()
+    if stripped.startswith('o ') and len(stripped) > 2:
+        return 'sub-bullet', stripped[2:].strip()
+
+    # Numbered list (1., 2., etc.)
+    import re
+    numbered_match = re.match(r'^(\d+)[.)]\s+(.+)', stripped)
+    if numbered_match:
+        return 'numbered', numbered_match.group(2)
+
+    # Lettered list (a., b., etc.)
+    lettered_match = re.match(r'^([a-zA-Z])[.)]\s+(.+)', stripped)
+    if lettered_match:
+        return 'lettered', lettered_match.group(2)
+
+    return None, text
+
+
+def format_text_with_spans(formatted_spans):
+    """Convert formatted spans to HTML with proper tags"""
+    if not formatted_spans:
+        return ''
+
+    result = []
+    for span in formatted_spans:
+        text = html.escape(span['text'])
+        if span.get('bold') and span.get('italic'):
+            result.append(f'<strong><em>{text}</em></strong>')
+        elif span.get('bold'):
+            result.append(f'<strong>{text}</strong>')
+        elif span.get('italic'):
+            result.append(f'<em>{text}</em>')
+        else:
+            result.append(text)
+
+    return ''.join(result)
+
+
+def should_join_across_page_break(last_text, current_text):
+    """Determine if text should be joined across a page break"""
+    if not last_text:
+        return False
+
+    last_text = last_text.strip()
+
+    # If the last line ends with sentence-ending punctuation, don't join
+    if last_text and last_text[-1] in '.!?:':
+        return False
+
+    # If the last line ends with a hyphen (word continuation), join
+    if last_text and last_text[-1] == '-':
+        return True
+
+    # If the last line ends mid-word or mid-sentence, join
+    # (doesn't end with punctuation)
+    return True
+
+
 def normalize_text_for_comparison(text):
     """Normalize text for comparing running headers (ignore numbers, case)"""
     # Replace all digits with #
@@ -280,9 +350,23 @@ def analyze_pdf_structure(pdf_bytes):
                         is_italic = any("Italic" in font or "Oblique" in font for font in fonts)
                         y_position = line["bbox"][1]  # Top of line
 
+                        # Store span-level formatting for rich text output
+                        formatted_spans = []
+                        for span in line["spans"]:
+                            span_text = span["text"]
+                            if span_text.strip():
+                                span_bold = "Bold" in span["font"] or "bold" in span["font"]
+                                span_italic = "Italic" in span["font"] or "Oblique" in span["font"]
+                                formatted_spans.append({
+                                    'text': span_text,
+                                    'bold': span_bold,
+                                    'italic': span_italic
+                                })
+
                         raw_lines.append({
                             'page': page_num + 1,
                             'text': line_text,
+                            'formatted_spans': formatted_spans,
                             'font_size': max_font_size,
                             'bold': is_bold,
                             'italic': is_italic,
@@ -547,6 +631,19 @@ def generate_standalone_html(elements, title):
         p {
             margin: 0 0 1rem 0;
         }
+        ul, ol {
+            margin: 0 0 1rem 0;
+            padding-left: 2rem;
+        }
+        li {
+            margin: 0.25rem 0;
+        }
+        em {
+            font-style: italic;
+        }
+        strong {
+            font-weight: 700;
+        }
         /* First heading should have no top margin */
         main > h1:first-child,
         main > h2:first-child,
@@ -590,46 +687,109 @@ def generate_standalone_html(elements, title):
         '    <main>'
     ]
 
-    # Group consecutive body text into paragraphs, detecting breaks via vertical gaps
+    # Process body text with formatting, lists, and proper paragraph breaks
     current_paragraph = []
+    current_list = []
+    current_list_type = None
     last_body_elem = None
+
+    def flush_paragraph():
+        nonlocal current_paragraph
+        if current_paragraph:
+            html_parts.append(f'        <p>{" ".join(current_paragraph)}</p>')
+            current_paragraph = []
+
+    def flush_list():
+        nonlocal current_list, current_list_type
+        if current_list:
+            if current_list_type in ('numbered', 'lettered'):
+                tag = 'ol'
+            else:
+                tag = 'ul'
+            html_parts.append(f'        <{tag}>')
+            for item in current_list:
+                html_parts.append(f'            <li>{item}</li>')
+            html_parts.append(f'        </{tag}>')
+            current_list = []
+            current_list_type = None
 
     for elem in elements:
         tag = elem['user_tag']
-        text = html.escape(elem['text'])
+
+        # Get formatted text (with italics/bold)
+        if elem.get('formatted_spans'):
+            formatted_text = format_text_with_spans(elem['formatted_spans'])
+        else:
+            formatted_text = html.escape(elem['text'])
 
         if tag == 'Body Text':
-            # Check if this is a new paragraph (large vertical gap from previous line)
-            if last_body_elem is not None and current_paragraph:
-                y_gap = elem['y_position'] - last_body_elem['y_position']
-                line_height = last_body_elem['font_size'] * 1.5  # Typical line spacing
-                # If gap is more than 2x normal line height, it's a new paragraph
-                if y_gap > line_height * 2 or elem['page'] != last_body_elem['page']:
-                    # Flush current paragraph
-                    html_parts.append(f'        <p>{" ".join(current_paragraph)}</p>')
-                    current_paragraph = []
+            # Check for list markers
+            list_type, list_content = detect_list_type(elem['text'])
 
-            current_paragraph.append(text)
+            if list_type:
+                # Flush any pending paragraph first
+                flush_paragraph()
+
+                # Get formatted version of the list content
+                if elem.get('formatted_spans'):
+                    # Re-format without the list marker
+                    formatted_list_content = format_text_with_spans(elem['formatted_spans'])
+                    # Try to strip the marker from the formatted content
+                    for marker in ['•', '●', '○', '◦', '▪', '-', 'o ']:
+                        if formatted_list_content.startswith(marker):
+                            formatted_list_content = formatted_list_content[len(marker):].strip()
+                            break
+                    # Also check for numbered/lettered patterns
+                    formatted_list_content = re.sub(r'^(\d+|[a-zA-Z])[.)]\s*', '', formatted_list_content)
+                else:
+                    formatted_list_content = html.escape(list_content)
+
+                # If switching list types, flush the old list
+                if current_list_type and current_list_type != list_type:
+                    flush_list()
+
+                current_list.append(formatted_list_content)
+                current_list_type = list_type
+                last_body_elem = elem
+                continue
+
+            # Not a list item - flush any pending list
+            flush_list()
+
+            # Check if this is a new paragraph
+            if last_body_elem is not None and current_paragraph:
+                is_new_page = elem['page'] != last_body_elem['page']
+                y_gap = elem['y_position'] - last_body_elem['y_position']
+                line_height = last_body_elem['font_size'] * 1.5
+
+                if is_new_page:
+                    # Check if we should join across page break
+                    last_text = last_body_elem.get('text', '')
+                    if not should_join_across_page_break(last_text, elem['text']):
+                        flush_paragraph()
+                elif y_gap > line_height * 2:
+                    # Large gap within same page = new paragraph
+                    flush_paragraph()
+
+            current_paragraph.append(formatted_text)
             last_body_elem = elem
         else:
-            # Flush paragraph if we have one
-            if current_paragraph:
-                html_parts.append(f'        <p>{" ".join(current_paragraph)}</p>')
-                current_paragraph = []
-                last_body_elem = None
-                current_paragraph = []
+            # Heading - flush any pending content
+            flush_paragraph()
+            flush_list()
+            last_body_elem = None
 
-            # Add heading
+            # Add heading with formatting
             if tag == 'H1':
-                html_parts.append(f'        <h1>{text}</h1>')
+                html_parts.append(f'        <h1>{formatted_text}</h1>')
             elif tag == 'H2':
-                html_parts.append(f'        <h2>{text}</h2>')
+                html_parts.append(f'        <h2>{formatted_text}</h2>')
             elif tag == 'H3':
-                html_parts.append(f'        <h3>{text}</h3>')
+                html_parts.append(f'        <h3>{formatted_text}</h3>')
 
-    # Flush any remaining paragraph
-    if current_paragraph:
-        html_parts.append(f'        <p>{" ".join(current_paragraph)}</p>')
+    # Flush any remaining content
+    flush_paragraph()
+    flush_list()
 
     html_parts.extend([
         '    </main>',
@@ -644,6 +804,8 @@ def generate_canvas_html(elements):
     """Generate Canvas-compatible HTML (headers start at H2)"""
     html_parts = []
     current_paragraph = []
+    current_list = []
+    current_list_type = None
     last_body_elem = None
 
     # Map heading levels down by one (H1->H2, H2->H3, H3->H4)
@@ -654,35 +816,89 @@ def generate_canvas_html(elements):
         'Body Text': 'p'
     }
 
+    def flush_paragraph():
+        nonlocal current_paragraph
+        if current_paragraph:
+            html_parts.append(f'<p>{" ".join(current_paragraph)}</p>')
+            current_paragraph = []
+
+    def flush_list():
+        nonlocal current_list, current_list_type
+        if current_list:
+            if current_list_type in ('numbered', 'lettered'):
+                tag = 'ol'
+            else:
+                tag = 'ul'
+            html_parts.append(f'<{tag}>')
+            for item in current_list:
+                html_parts.append(f'    <li>{item}</li>')
+            html_parts.append(f'</{tag}>')
+            current_list = []
+            current_list_type = None
+
     for elem in elements:
         tag = elem['user_tag']
-        text = html.escape(elem['text'])
+
+        # Get formatted text (with italics/bold)
+        if elem.get('formatted_spans'):
+            formatted_text = format_text_with_spans(elem['formatted_spans'])
+        else:
+            formatted_text = html.escape(elem['text'])
 
         if tag == 'Body Text':
-            # Check if this is a new paragraph (large vertical gap from previous line)
+            # Check for list markers
+            list_type, list_content = detect_list_type(elem['text'])
+
+            if list_type:
+                flush_paragraph()
+
+                # Get formatted version of the list content
+                if elem.get('formatted_spans'):
+                    formatted_list_content = format_text_with_spans(elem['formatted_spans'])
+                    for marker in ['•', '●', '○', '◦', '▪', '-', 'o ']:
+                        if formatted_list_content.startswith(marker):
+                            formatted_list_content = formatted_list_content[len(marker):].strip()
+                            break
+                    formatted_list_content = re.sub(r'^(\d+|[a-zA-Z])[.)]\s*', '', formatted_list_content)
+                else:
+                    formatted_list_content = html.escape(list_content)
+
+                if current_list_type and current_list_type != list_type:
+                    flush_list()
+
+                current_list.append(formatted_list_content)
+                current_list_type = list_type
+                last_body_elem = elem
+                continue
+
+            flush_list()
+
+            # Check if this is a new paragraph
             if last_body_elem is not None and current_paragraph:
+                is_new_page = elem['page'] != last_body_elem['page']
                 y_gap = elem['y_position'] - last_body_elem['y_position']
                 line_height = last_body_elem['font_size'] * 1.5
-                if y_gap > line_height * 2 or elem['page'] != last_body_elem['page']:
-                    html_parts.append(f'<p>{" ".join(current_paragraph)}</p>')
-                    current_paragraph = []
 
-            current_paragraph.append(text)
+                if is_new_page:
+                    last_text = last_body_elem.get('text', '')
+                    if not should_join_across_page_break(last_text, elem['text']):
+                        flush_paragraph()
+                elif y_gap > line_height * 2:
+                    flush_paragraph()
+
+            current_paragraph.append(formatted_text)
             last_body_elem = elem
         else:
-            # Flush paragraph if we have one
-            if current_paragraph:
-                html_parts.append(f'<p>{" ".join(current_paragraph)}</p>')
-                current_paragraph = []
-                last_body_elem = None
+            flush_paragraph()
+            flush_list()
+            last_body_elem = None
 
             # Add heading (shifted down one level)
             html_tag = tag_map.get(tag, 'p')
-            html_parts.append(f'<{html_tag}>{text}</{html_tag}>')
+            html_parts.append(f'<{html_tag}>{formatted_text}</{html_tag}>')
 
-    # Flush any remaining paragraph
-    if current_paragraph:
-        html_parts.append(f'<p>{" ".join(current_paragraph)}</p>')
+    flush_paragraph()
+    flush_list()
 
     return '\n'.join(html_parts)
 
