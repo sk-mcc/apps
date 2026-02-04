@@ -455,46 +455,52 @@ def get_body_text_sample(elements, max_items=5):
 
 
 def normalize_heading_hierarchy(elements):
-    """Ensure heading levels don't skip - must go H1->H2->H3, never H1->H3"""
+    """Ensure heading levels don't skip - must go H1->H2->H3, never H1->H3
+
+    When a skip is detected, shift ALL remaining headings by the skip amount,
+    preserving their relative structure.
+    """
     if not elements:
         return elements
 
-    # First pass: check if H3s vastly outnumber H2s (detection probably wrong)
-    # If so, promote all H3s to H2 before doing sequential normalization
-    h2_count = sum(1 for e in elements if e.get('user_tag') == 'H2')
-    h3_count = sum(1 for e in elements if e.get('user_tag') == 'H3')
+    # Get all headings with their indices
+    headings = []
+    for i, elem in enumerate(elements):
+        tag = elem.get('user_tag', '')
+        if tag and tag.startswith('H') and tag[1:].isdigit():
+            headings.append((i, int(tag[1:])))
 
-    # If there are many H3s but few H2s, they're probably all the same level
-    if h3_count > 2 and h2_count <= 2 and h3_count > h2_count * 2:
-        for elem in elements:
-            if elem.get('user_tag') == 'H3':
-                elem['user_tag'] = 'H2'
-                elem['suggested_tag'] = 'H2'
+    if not headings:
+        return elements
 
-    # Second pass: ensure no skipped levels in sequence
-    max_level_allowed = 1  # Start: only H1 is allowed
+    # Find where skip occurs and calculate total shift needed
+    shift_amount = 0
+    prev_level = 0
 
-    for elem in elements:
-        tag = elem['user_tag']
+    for idx, (elem_idx, level) in enumerate(headings):
+        # Apply current shift
+        adjusted_level = level - shift_amount
 
-        # Skip non-headings
-        if not tag or not tag.startswith('H') or not tag[1:].isdigit():
-            continue
+        # Check if this creates a skip
+        if prev_level > 0 and adjusted_level > prev_level + 1:
+            # Skip detected! Calculate additional shift needed
+            additional_shift = adjusted_level - (prev_level + 1)
+            shift_amount += additional_shift
+            adjusted_level = prev_level + 1
 
-        current_level = int(tag[1:])
+        # Update for next iteration
+        prev_level = adjusted_level
+        headings[idx] = (elem_idx, adjusted_level)
 
-        # Going up (e.g., H3 -> H1) is always allowed
-        if current_level <= max_level_allowed:
-            # Update max_level_allowed: after seeing Hn, H(n+1) becomes allowed
-            max_level_allowed = current_level + 1
-        else:
-            # Trying to skip! (e.g., H1 -> H3 when only H2 is allowed)
-            # Adjust this heading to the max allowed level
-            new_level = max_level_allowed
-            elem['user_tag'] = f'H{new_level}'
-            elem['suggested_tag'] = f'H{new_level}'
-            # Now the next level becomes allowed
-            max_level_allowed = new_level + 1
+    # Apply the adjusted levels back to elements (cap at H2 minimum for non-first headings)
+    first_heading = True
+    for elem_idx, new_level in headings:
+        # Don't let non-first headings become H1
+        if not first_heading and new_level < 2:
+            new_level = 2
+        elements[elem_idx]['user_tag'] = f'H{new_level}'
+        elements[elem_idx]['suggested_tag'] = f'H{new_level}'
+        first_heading = False
 
     return elements
 
