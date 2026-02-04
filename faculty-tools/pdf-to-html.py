@@ -368,30 +368,47 @@ def detect_heading_hierarchy(elements):
     if not elements:
         return elements
 
-    # Count font sizes (rounded to nearest 0.5pt for grouping)
+    # Count font sizes (rounded to nearest 1pt for grouping to avoid tiny variations)
     size_counts = Counter()
     for elem in elements:
-        rounded_size = round(elem['font_size'] * 2) / 2
+        rounded_size = round(elem['font_size'])
         size_counts[rounded_size] += elem['char_count']
 
     # Find body text size (most common by character count)
     body_size = size_counts.most_common(1)[0][0] if size_counts else 12
 
-    # Get unique sizes larger than body text (with some tolerance)
-    larger_sizes = sorted([s for s in size_counts.keys() if s > body_size + 0.5], reverse=True)
+    # Get unique sizes significantly larger than body text (at least 2pt bigger)
+    larger_sizes = sorted([s for s in size_counts.keys() if s > body_size + 1.5], reverse=True)
 
-    # Map sizes to heading levels
+    # Cluster sizes that are within 2pt of each other (same heading level)
+    clustered_sizes = []
+    for size in larger_sizes:
+        # Check if this size fits in an existing cluster
+        fits_cluster = False
+        for cluster in clustered_sizes:
+            if abs(size - cluster[0]) <= 2:
+                cluster.append(size)
+                fits_cluster = True
+                break
+        if not fits_cluster:
+            clustered_sizes.append([size])
+
+    # Map each cluster to a heading level (use the max size in cluster as representative)
     size_to_heading = {}
-    for i, size in enumerate(larger_sizes[:3]):  # Max H1, H2, H3
-        size_to_heading[size] = f'H{i + 1}'
+    for i, cluster in enumerate(clustered_sizes[:3]):  # Max H1, H2, H3
+        for size in cluster:
+            size_to_heading[size] = f'H{i + 1}'
 
     # Assign tags to elements
     for elem in elements:
-        rounded_size = round(elem['font_size'] * 2) / 2
+        rounded_size = round(elem['font_size'])
         char_count = elem['char_count']
 
         # Long text is always body (paragraphs)
         if char_count > 200:
+            elem['suggested_tag'] = 'Body Text'
+        # Italic-only short text is likely author byline, not a heading
+        elif elem['italic'] and not elem['bold'] and char_count < 50:
             elem['suggested_tag'] = 'Body Text'
         # Check if it matches a heading size
         elif rounded_size in size_to_heading:
