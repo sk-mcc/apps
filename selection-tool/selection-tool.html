@@ -24,7 +24,12 @@
       --warning: #6b5000;
       --warning-bg: #fef8e8;
       --error: #a32d2d;
+      --error-bg: #f8ebe8;
       --focus: #3a7ca5;
+      --upload-bg: #f8fbfd;
+      --upload-bg-hover: #ffffff;
+      --btn-disabled: #9ca3af;
+      --title-gradient: linear-gradient(135deg, #2d5a7b 0%, #3a8a7a 100%);
     }
 
     /* Dark Mode */
@@ -33,18 +38,23 @@
       --bg-card: #1a2027;
       --bg-hover: #242d36;
       --border: #3d4f5f;
-      --border-light: #2d3d4d;
-      --text: #e8f0f5;
-      --text-muted: #94a3b8;
-      --accent: #5ba3d0;
-      --accent-hover: #7dbde5;
-      --accent-light: #1e3a4a;
-      --success: #4ade80;
+      --border-light: #3d4f5f;
+      --text: #f0f4f8;
+      --text-muted: #b8c5d3;
+      --accent: #6bb3e0;
+      --accent-hover: #8fc9f0;
+      --accent-light: #1a3044;
+      --success: #6ee7a0;
       --success-bg: #14332a;
-      --warning: #fbbf24;
-      --warning-bg: #2d2305;
-      --error: #f87171;
-      --focus: #5ba3d0;
+      --warning: #fcd34d;
+      --warning-bg: #3d3010;
+      --error: #fca5a5;
+      --error-bg: #3d1f1f;
+      --focus: #6bb3e0;
+      --upload-bg: #141a20;
+      --upload-bg-hover: #1a2530;
+      --btn-disabled: #4a5568;
+      --title-gradient: linear-gradient(135deg, #6bb3e0 0%, #5ecead 100%);
     }
 
     * {
@@ -115,7 +125,7 @@
     h1 {
       font-size: 2.75rem;
       font-weight: 700;
-      background: linear-gradient(135deg, #2d5a7b 0%, #3a8a7a 100%);
+      background: var(--title-gradient);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -140,7 +150,7 @@
 
     /* Upload Area */
     .upload-area {
-      background: linear-gradient(180deg, #f8fbfd 0%, #ffffff 100%);
+      background: var(--upload-bg);
       border: 3px dashed var(--border-light);
       border-radius: 16px;
       padding: 3rem 2rem;
@@ -152,14 +162,14 @@
     .upload-area:hover,
     .upload-area:focus-within {
       border-color: var(--accent);
-      background: linear-gradient(180deg, var(--accent-light) 0%, #ffffff 100%);
+      background: var(--upload-bg-hover);
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(58, 124, 165, 0.15);
     }
 
     .upload-area.drag-over {
       border-color: var(--accent);
-      background: linear-gradient(180deg, var(--accent-light) 0%, #ffffff 100%);
+      background: var(--upload-bg-hover);
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(58, 124, 165, 0.15);
     }
@@ -269,7 +279,7 @@
     }
 
     .btn-primary:disabled {
-      background: #9ca3af;
+      background: var(--btn-disabled);
       cursor: not-allowed;
       box-shadow: none;
       transform: none;
@@ -392,7 +402,7 @@
 
     /* Error Display */
     .error-message {
-      background: #f8ebe8;
+      background: var(--error-bg);
       border: 2px solid var(--error);
       border-radius: 8px;
       padding: 1rem;
