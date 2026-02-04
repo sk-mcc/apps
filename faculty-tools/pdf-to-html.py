@@ -248,6 +248,78 @@ def merge_consecutive_headings(elements):
     return merged
 
 
+def join_body_text_lines(elements):
+    """Join consecutive body text lines that are continuations into single elements"""
+    if not elements:
+        return elements
+
+    result = []
+    current_block = None
+
+    for elem in elements:
+        tag = elem.get('user_tag', '')
+
+        if tag != 'Body Text':
+            # Not body text - flush current block and add this element
+            if current_block:
+                result.append(current_block)
+                current_block = None
+            result.append(elem)
+            continue
+
+        # Body text - check if we should join with previous
+        if current_block is None:
+            current_block = elem.copy()
+            continue
+
+        # Check if this line starts with a list marker (don't join across list items)
+        text = elem.get('text', '').strip()
+        is_list_start = (
+            text.startswith('•') or text.startswith('●') or
+            text.startswith('○') or text.startswith('◦') or
+            text.startswith('-') and len(text) > 1 and text[1] == ' ' or
+            (len(text) > 2 and text[0].isdigit() and text[1] in '.)')
+        )
+
+        if is_list_start:
+            # New list item - flush current block
+            if current_block:
+                result.append(current_block)
+            current_block = elem.copy()
+            continue
+
+        # Check if we should join this line to the current block
+        if should_join_lines(current_block, elem):
+            # Join the text
+            current_text = current_block.get('text', '')
+            new_text = elem.get('text', '')
+
+            # Handle hyphenated words
+            if current_text.endswith('-'):
+                current_block['text'] = current_text[:-1] + new_text
+            else:
+                current_block['text'] = current_text + ' ' + new_text
+
+            current_block['char_count'] = len(current_block['text'])
+
+            # Merge formatted spans if available
+            if 'formatted_spans' in current_block and 'formatted_spans' in elem:
+                current_block['formatted_spans'].extend(elem.get('formatted_spans', []))
+            elif 'formatted_spans' in elem:
+                current_block['formatted_spans'] = elem['formatted_spans']
+
+        else:
+            # Don't join - flush current block and start new one
+            result.append(current_block)
+            current_block = elem.copy()
+
+    # Don't forget the last block
+    if current_block:
+        result.append(current_block)
+
+    return result
+
+
 def detect_list_type(text):
     """Detect if text starts with a list marker and return the type"""
     stripped = text.strip()
@@ -298,24 +370,46 @@ def format_text_with_spans(formatted_spans):
     return ''.join(result)
 
 
-def should_join_across_page_break(last_text, current_text):
-    """Determine if text should be joined across a page break"""
+def should_join_lines(last_elem, current_elem):
+    """Determine if two lines should be joined into the same paragraph/block"""
+    if not last_elem or not current_elem:
+        return False
+
+    last_text = last_elem.get('text', '').strip()
     if not last_text:
         return False
 
-    last_text = last_text.strip()
-
-    # If the last line ends with sentence-ending punctuation, don't join
-    if last_text and last_text[-1] in '.!?:':
-        return False
-
-    # If the last line ends with a hyphen (word continuation), join
-    if last_text and last_text[-1] == '-':
+    # Different pages - check more carefully
+    if last_elem['page'] != current_elem['page']:
+        # Only join across pages if last line clearly continues
+        if last_text[-1] in '.!?:;':
+            return False
+        # Join if ends with comma, or mid-sentence
         return True
 
-    # If the last line ends mid-word or mid-sentence, join
-    # (doesn't end with punctuation)
-    return True
+    # Same page - check vertical distance
+    y_gap = current_elem['y_position'] - last_elem['y_position']
+    line_height = last_elem['font_size'] * 1.5
+
+    # If gap is too large, don't join (new paragraph)
+    if y_gap > line_height * 2:
+        return False
+
+    # If last line ends with sentence punctuation AND next line starts with capital
+    # it's probably a new sentence/paragraph
+    if last_text[-1] in '.!?':
+        current_text = current_elem.get('text', '').strip()
+        if current_text and current_text[0].isupper():
+            # Could be new paragraph OR continuation - check gap
+            if y_gap > line_height * 1.5:
+                return False
+
+    # If last line ends with hyphen, definitely join (word split)
+    if last_text[-1] == '-':
+        return True
+
+    # Generally join lines that are close together
+    return y_gap < line_height * 2
 
 
 def normalize_text_for_comparison(text):
@@ -591,6 +685,8 @@ def normalize_heading_hierarchy(elements):
 
 def generate_standalone_html(elements, title):
     """Generate a complete HTML document with embedded CSS"""
+    # First, join consecutive body text lines that are continuations
+    elements = join_body_text_lines(elements)
     css = """
         * {
             box-sizing: border-box;
@@ -802,6 +898,9 @@ def generate_standalone_html(elements, title):
 
 def generate_canvas_html(elements):
     """Generate Canvas-compatible HTML (headers start at H2)"""
+    # First, join consecutive body text lines that are continuations
+    elements = join_body_text_lines(elements)
+
     html_parts = []
     current_paragraph = []
     current_list = []
