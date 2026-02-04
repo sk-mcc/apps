@@ -2,6 +2,7 @@ import streamlit as st
 import fitz  # PyMuPDF
 from collections import Counter
 import html
+import re
 
 st.set_page_config(page_title="PDF to Accessible HTML", page_icon="📄", layout="wide")
 
@@ -247,13 +248,24 @@ def merge_consecutive_headings(elements):
     return merged
 
 
+def normalize_text_for_comparison(text):
+    """Normalize text for comparing running headers (ignore numbers, case)"""
+    # Replace all digits with #
+    normalized = re.sub(r'\d+', '#', text.lower())
+    # Remove extra whitespace
+    normalized = ' '.join(normalized.split())
+    return normalized
+
+
 def analyze_pdf_structure(pdf_bytes):
     """Extract text from PDF with font metadata"""
     doc = fitz.open(stream=pdf_bytes, filetype="pdf")
     raw_lines = []
+    page_heights = {}
 
     # First pass: collect all lines
     for page_num, page in enumerate(doc):
+        page_heights[page_num + 1] = page.rect.height
         blocks = page.get_text("dict")["blocks"]
 
         for block in blocks:
@@ -276,6 +288,7 @@ def analyze_pdf_structure(pdf_bytes):
                             'italic': is_italic,
                             'char_count': len(line_text),
                             'y_position': y_position,
+                            'page_height': page.rect.height,
                             'suggested_tag': None,
                             'user_tag': None
                         })
@@ -290,6 +303,25 @@ def analyze_pdf_structure(pdf_bytes):
     for elem in all_lines:
         text_page_counts[elem['text']] += 1
 
+    # Track normalized text patterns (catches "WRITING SPACES 4", "WRITING SPACES 5", etc.)
+    normalized_page_counts = Counter()
+    for elem in all_lines:
+        normalized = normalize_text_for_comparison(elem['text'])
+        normalized_page_counts[normalized] += 1
+
+    # Track text in header/footer zones (top 72pt or bottom 72pt)
+    header_footer_patterns = set()
+    for elem in all_lines:
+        page_height = elem.get('page_height', 792)  # Default letter size
+        in_header_zone = elem['y_position'] < 72
+        in_footer_zone = elem['y_position'] > page_height - 72
+
+        if in_header_zone or in_footer_zone:
+            normalized = normalize_text_for_comparison(elem['text'])
+            # If this pattern appears in header/footer zone on 2+ pages, mark it
+            if normalized_page_counts[normalized] >= 2:
+                header_footer_patterns.add(normalized)
+
     # Filter out likely headers/footers and noise
     total_pages = max(e['page'] for e in all_lines) if all_lines else 1
     repeated_threshold = min(3, total_pages)
@@ -300,6 +332,11 @@ def analyze_pdf_structure(pdf_bytes):
 
         # Skip if it appears on multiple pages (header/footer)
         if text_page_counts[text] >= repeated_threshold:
+            continue
+
+        # Skip running headers/footers (same text pattern with varying page numbers)
+        normalized = normalize_text_for_comparison(text)
+        if normalized in header_footer_patterns:
             continue
 
         # Skip standalone page numbers and short numeric patterns
