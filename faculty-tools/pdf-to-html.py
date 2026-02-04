@@ -157,22 +157,25 @@ def merge_consecutive_lines(lines, body_font_size=None):
         # Check if this line should merge with the previous one
         same_page = line['page'] == current['page']
 
-        # For font size comparison, be more lenient (small caps can vary)
-        similar_size = abs(line['font_size'] - current['font_size']) < 2.0
+        # Is this likely a heading? (larger than body text)
+        avg_size = (current['font_size'] + line['font_size']) / 2
+        is_heading_sized = min(current['font_size'], line['font_size']) > body_font_size + 0.5
+
+        # For font size comparison - very lenient for headings (small caps vary a lot)
+        if is_heading_sized:
+            similar_size = abs(line['font_size'] - current['font_size']) < 5.0  # 5pt tolerance for headings
+        else:
+            similar_size = abs(line['font_size'] - current['font_size']) < 2.0
 
         # Check vertical proximity - be more generous for larger text (headings)
-        avg_size = (current['font_size'] + line['font_size']) / 2
-        max_gap = avg_size * 2.5  # Allow up to 2.5x font size gap
+        max_gap = avg_size * 3.0  # Allow up to 3x font size gap
         y_gap = line['y_position'] - current['y_position']
         close_vertically = 0 < y_gap < max_gap
-
-        # Is this likely a heading? (larger than body text)
-        is_heading_sized = avg_size > body_font_size + 1
 
         # For headings, be more aggressive about merging
         # For body text, require both lines to be short
         if is_heading_sized:
-            # Headings: merge if same page, close, and similar size
+            # Headings: merge if same page and close vertically (very lenient on size)
             should_merge = same_page and similar_size and close_vertically
         else:
             # Body text: only merge short lines with same formatting
@@ -194,6 +197,50 @@ def merge_consecutive_lines(lines, body_font_size=None):
             current = line.copy()
 
     # Don't forget the last one
+    if current:
+        merged.append(current)
+
+    return merged
+
+
+def merge_consecutive_headings(elements):
+    """Second pass: merge consecutive heading elements that should be together"""
+    if not elements:
+        return elements
+
+    merged = []
+    current = None
+
+    for elem in elements:
+        if current is None:
+            current = elem.copy()
+            continue
+
+        # Only consider merging if both are headings
+        current_is_heading = current['user_tag'] in ['H1', 'H2', 'H3']
+        elem_is_heading = elem['user_tag'] in ['H1', 'H2', 'H3']
+
+        if current_is_heading and elem_is_heading:
+            same_page = elem['page'] == current['page']
+            # Check if they're close in heading level (H1+H2 can merge, but not H1+H3)
+            level_diff = abs(int(current['user_tag'][1]) - int(elem['user_tag'][1]))
+            close_level = level_diff <= 1
+
+            if same_page and close_level:
+                # Merge them
+                current['text'] = current['text'] + ' ' + elem['text']
+                current['char_count'] = len(current['text'])
+                current['font_size'] = max(current['font_size'], elem['font_size'])
+                # Keep the higher heading level (H1 > H2 > H3)
+                if int(elem['user_tag'][1]) < int(current['user_tag'][1]):
+                    current['user_tag'] = elem['user_tag']
+                    current['suggested_tag'] = elem['suggested_tag']
+                continue
+
+        # Don't merge
+        merged.append(current)
+        current = elem.copy()
+
     if current:
         merged.append(current)
 
@@ -545,6 +592,8 @@ if uploaded_file:
             # Extract and analyze
             elements = analyze_pdf_structure(pdf_bytes)
             elements = detect_heading_hierarchy(elements)
+            # Second pass: merge consecutive headings that got split
+            elements = merge_consecutive_headings(elements)
             st.session_state.text_elements = elements
 
             # Try to detect title from first H1
