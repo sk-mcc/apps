@@ -133,10 +133,18 @@ if 'document_title' not in st.session_state:
     st.session_state.document_title = "Untitled Document"
 
 
-def merge_consecutive_lines(lines):
+def merge_consecutive_lines(lines, body_font_size=None):
     """Merge consecutive lines that appear to be part of the same block (e.g., multi-line headings)"""
     if not lines:
         return lines
+
+    # If we don't know body size yet, estimate it as the most common size
+    if body_font_size is None:
+        size_counts = Counter()
+        for line in lines:
+            rounded = round(line['font_size'] * 2) / 2
+            size_counts[rounded] += line['char_count']
+        body_font_size = size_counts.most_common(1)[0][0] if size_counts else 12
 
     merged = []
     current = None
@@ -148,23 +156,38 @@ def merge_consecutive_lines(lines):
 
         # Check if this line should merge with the previous one
         same_page = line['page'] == current['page']
-        similar_size = abs(line['font_size'] - current['font_size']) < 1.0
-        same_formatting = line['bold'] == current['bold']
 
-        # Check vertical proximity (typical line spacing is 1.2-1.5x font size)
-        max_gap = current['font_size'] * 2.0  # Allow up to 2x font size gap
+        # For font size comparison, be more lenient (small caps can vary)
+        similar_size = abs(line['font_size'] - current['font_size']) < 2.0
+
+        # Check vertical proximity - be more generous for larger text (headings)
+        avg_size = (current['font_size'] + line['font_size']) / 2
+        max_gap = avg_size * 2.5  # Allow up to 2.5x font size gap
         y_gap = line['y_position'] - current['y_position']
         close_vertically = 0 < y_gap < max_gap
 
-        # Both lines should be relatively short (heading-like) to merge
-        both_short = current['char_count'] < 120 and line['char_count'] < 120
+        # Is this likely a heading? (larger than body text)
+        is_heading_sized = avg_size > body_font_size + 1
 
-        if same_page and similar_size and same_formatting and close_vertically and both_short:
+        # For headings, be more aggressive about merging
+        # For body text, require both lines to be short
+        if is_heading_sized:
+            # Headings: merge if same page, close, and similar size
+            should_merge = same_page and similar_size and close_vertically
+        else:
+            # Body text: only merge short lines with same formatting
+            both_short = current['char_count'] < 80 and line['char_count'] < 80
+            same_formatting = line['bold'] == current['bold']
+            should_merge = same_page and similar_size and close_vertically and both_short and same_formatting
+
+        if should_merge:
             # Merge: append text with space
             current['text'] = current['text'] + ' ' + line['text']
             current['char_count'] = len(current['text'])
             # Keep the larger font size
             current['font_size'] = max(current['font_size'], line['font_size'])
+            # Preserve bold if either line is bold
+            current['bold'] = current['bold'] or line['bold']
         else:
             # Don't merge, save current and start new
             merged.append(current)
