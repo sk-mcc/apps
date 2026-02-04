@@ -370,6 +370,23 @@ def format_text_with_spans(formatted_spans):
     return ''.join(result)
 
 
+def should_join_across_page_break(last_text, current_text):
+    """Simple check if text should be joined across a page break (for HTML generation)"""
+    if not last_text:
+        return False
+
+    last_text = last_text.strip()
+    if not last_text:
+        return False
+
+    # If the last line ends with sentence-ending punctuation, don't join
+    if last_text[-1] in '.!?:;':
+        return False
+
+    # Join if ends mid-sentence
+    return True
+
+
 def should_join_lines(last_elem, current_elem):
     """Determine if two lines should be joined into the same paragraph/block"""
     if not last_elem or not current_elem:
