@@ -450,16 +450,19 @@
     /* Skip link for accessibility */
     .skip-link {
       position: absolute;
-      top: -40px;
-      left: 0;
+      top: -100%;
+      left: 1rem;
       background: var(--accent);
       color: #ffffff;
-      padding: 8px;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
       z-index: 100;
+      text-decoration: none;
+      font-weight: 600;
     }
 
     .skip-link:focus {
-      top: 0;
+      top: 1rem;
     }
 
     /* Responsive */
