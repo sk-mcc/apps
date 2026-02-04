@@ -380,22 +380,37 @@ def detect_heading_hierarchy(elements):
     # Get unique sizes significantly larger than body text (at least 2pt bigger)
     larger_sizes = sorted([s for s in size_counts.keys() if s > body_size + 1.5], reverse=True)
 
-    # Cluster sizes that are within 2pt of each other (same heading level)
+    # Cluster sizes more aggressively (within 4pt = same heading level)
+    # This prevents slight font size variations from creating extra heading levels
     clustered_sizes = []
     for size in larger_sizes:
         # Check if this size fits in an existing cluster
         fits_cluster = False
         for cluster in clustered_sizes:
-            if abs(size - cluster[0]) <= 2:
+            # Compare to the average of the cluster, not just first element
+            cluster_avg = sum(cluster) / len(cluster)
+            if abs(size - cluster_avg) <= 4:
                 cluster.append(size)
                 fits_cluster = True
                 break
         if not fits_cluster:
             clustered_sizes.append([size])
 
-    # Map each cluster to a heading level (use the max size in cluster as representative)
+    # For most documents, limit to 2 heading levels (H1 for title, H2 for sections)
+    # Only use H3 if there's a clear third tier with significant size difference
+    max_levels = 2
+    if len(clustered_sizes) >= 3:
+        # Check if third cluster is significantly different from second
+        avg_1 = sum(clustered_sizes[0]) / len(clustered_sizes[0])
+        avg_2 = sum(clustered_sizes[1]) / len(clustered_sizes[1])
+        avg_3 = sum(clustered_sizes[2]) / len(clustered_sizes[2])
+        # Only use 3 levels if there's at least 3pt gap between each level
+        if (avg_1 - avg_2) >= 3 and (avg_2 - avg_3) >= 3:
+            max_levels = 3
+
+    # Map each cluster to a heading level
     size_to_heading = {}
-    for i, cluster in enumerate(clustered_sizes[:3]):  # Max H1, H2, H3
+    for i, cluster in enumerate(clustered_sizes[:max_levels]):
         for size in cluster:
             size_to_heading[size] = f'H{i + 1}'
 
