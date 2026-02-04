@@ -455,44 +455,36 @@ def get_body_text_sample(elements, max_items=5):
 
 
 def normalize_heading_hierarchy(elements):
-    """Ensure heading levels don't skip (H1 -> H3 becomes H1 -> H2 for accessibility)"""
+    """Ensure heading levels don't skip - must go H1->H2->H3, never H1->H3"""
     if not elements:
         return elements
 
-    # Step 1: Find all heading levels used
-    has_h1 = any(e['user_tag'] == 'H1' for e in elements)
-    has_h2 = any(e['user_tag'] == 'H2' for e in elements)
-    has_h3 = any(e['user_tag'] == 'H3' for e in elements)
-    has_h4 = any(e['user_tag'] == 'H4' for e in elements)
+    # Track the deepest level we've properly reached in sequence
+    # After seeing H1, only H1 and H2 are allowed
+    # After seeing H2, H3 becomes allowed, etc.
+    max_level_allowed = 1  # Start: only H1 is allowed
 
-    # Step 2: Determine what each level should map to
-    # Build list of levels that exist, in order
-    existing_levels = []
-    if has_h1:
-        existing_levels.append('H1')
-    if has_h2:
-        existing_levels.append('H2')
-    if has_h3:
-        existing_levels.append('H3')
-    if has_h4:
-        existing_levels.append('H4')
-
-    # Target levels are H1, H2, H3, H4 in sequence
-    target_levels = ['H1', 'H2', 'H3', 'H4']
-
-    # Create mapping: existing_levels[i] -> target_levels[i]
-    level_map = {}
-    for i, existing in enumerate(existing_levels):
-        if i < len(target_levels):
-            level_map[existing] = target_levels[i]
-
-    # Step 3: Apply mapping
     for elem in elements:
-        old_tag = elem['user_tag']
-        if old_tag in level_map:
-            new_tag = level_map[old_tag]
-            elem['user_tag'] = new_tag
-            elem['suggested_tag'] = new_tag
+        tag = elem['user_tag']
+
+        # Skip non-headings
+        if not tag or not tag.startswith('H') or not tag[1:].isdigit():
+            continue
+
+        current_level = int(tag[1:])
+
+        # Going up (e.g., H3 -> H1) is always allowed
+        if current_level <= max_level_allowed:
+            # Update max_level_allowed: after seeing Hn, H(n+1) becomes allowed
+            max_level_allowed = current_level + 1
+        else:
+            # Trying to skip! (e.g., H1 -> H3 when only H2 is allowed)
+            # Adjust this heading to the max allowed level
+            new_level = max_level_allowed
+            elem['user_tag'] = f'H{new_level}'
+            elem['suggested_tag'] = f'H{new_level}'
+            # Now the next level becomes allowed
+            max_level_allowed = new_level + 1
 
     return elements
 
