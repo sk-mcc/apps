@@ -444,28 +444,29 @@ def normalize_heading_hierarchy(elements):
     if not elements:
         return elements
 
-    # Track the deepest heading level we've properly reached
-    # Start at 0 (no heading seen yet), H1=1, H2=2, H3=3
-    max_level_seen = 0
-
+    # Find all heading levels actually used in the document
+    levels_used = set()
     for elem in elements:
         tag = elem['user_tag']
-
         if tag in ['H1', 'H2', 'H3']:
-            current_level = int(tag[1])  # 1, 2, or 3
+            levels_used.add(int(tag[1]))
 
-            # What's the deepest we're allowed to go? (one more than max seen)
-            allowed_level = max_level_seen + 1
+    if not levels_used:
+        return elements
 
-            if current_level > allowed_level:
-                # This heading skips a level, adjust it
-                elem['user_tag'] = f'H{allowed_level}'
-                elem['suggested_tag'] = elem['user_tag']
-                current_level = allowed_level
+    # Create a mapping from old levels to new sequential levels
+    # e.g., if document has H1 and H3, map {1: 1, 3: 2}
+    sorted_levels = sorted(levels_used)
+    level_map = {old_level: new_level for new_level, old_level in enumerate(sorted_levels, start=1)}
 
-            # Update max level seen (but don't go backwards)
-            if current_level > max_level_seen:
-                max_level_seen = current_level
+    # Apply the mapping to all headings
+    for elem in elements:
+        tag = elem['user_tag']
+        if tag in ['H1', 'H2', 'H3']:
+            old_level = int(tag[1])
+            new_level = level_map[old_level]
+            elem['user_tag'] = f'H{new_level}'
+            elem['suggested_tag'] = elem['user_tag']
 
     return elements
 
