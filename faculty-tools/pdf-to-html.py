@@ -133,14 +133,54 @@ if 'document_title' not in st.session_state:
     st.session_state.document_title = "Untitled Document"
 
 
+def merge_consecutive_lines(lines):
+    """Merge consecutive lines that appear to be part of the same block (e.g., multi-line headings)"""
+    if not lines:
+        return lines
+
+    merged = []
+    current = None
+
+    for line in lines:
+        if current is None:
+            current = line.copy()
+            continue
+
+        # Check if this line should merge with the previous one
+        same_page = line['page'] == current['page']
+        similar_size = abs(line['font_size'] - current['font_size']) < 1.0
+        same_formatting = line['bold'] == current['bold']
+
+        # Check vertical proximity (typical line spacing is 1.2-1.5x font size)
+        max_gap = current['font_size'] * 2.0  # Allow up to 2x font size gap
+        y_gap = line['y_position'] - current['y_position']
+        close_vertically = 0 < y_gap < max_gap
+
+        # Both lines should be relatively short (heading-like) to merge
+        both_short = current['char_count'] < 120 and line['char_count'] < 120
+
+        if same_page and similar_size and same_formatting and close_vertically and both_short:
+            # Merge: append text with space
+            current['text'] = current['text'] + ' ' + line['text']
+            current['char_count'] = len(current['text'])
+            # Keep the larger font size
+            current['font_size'] = max(current['font_size'], line['font_size'])
+        else:
+            # Don't merge, save current and start new
+            merged.append(current)
+            current = line.copy()
+
+    # Don't forget the last one
+    if current:
+        merged.append(current)
+
+    return merged
+
+
 def analyze_pdf_structure(pdf_bytes):
     """Extract text from PDF with font metadata"""
     doc = fitz.open(stream=pdf_bytes, filetype="pdf")
-    elements = []
-
-    # Track text that appears on multiple pages (likely headers/footers)
-    text_page_counts = Counter()
-    all_lines = []
+    raw_lines = []
 
     # First pass: collect all lines
     for page_num, page in enumerate(doc):
@@ -158,7 +198,7 @@ def analyze_pdf_structure(pdf_bytes):
                         is_italic = any("Italic" in font or "Oblique" in font for font in fonts)
                         y_position = line["bbox"][1]  # Top of line
 
-                        all_lines.append({
+                        raw_lines.append({
                             'page': page_num + 1,
                             'text': line_text,
                             'font_size': max_font_size,
@@ -170,15 +210,21 @@ def analyze_pdf_structure(pdf_bytes):
                             'user_tag': None
                         })
 
-                        # Track for header/footer detection
-                        text_page_counts[line_text] += 1
-
     doc.close()
 
-    # Filter out likely headers/footers (text appearing on 3+ pages)
+    # Merge consecutive lines that are part of the same heading/block
+    all_lines = merge_consecutive_lines(raw_lines)
+
+    # Track text that appears on multiple pages (likely headers/footers)
+    text_page_counts = Counter()
+    for elem in all_lines:
+        text_page_counts[elem['text']] += 1
+
+    # Filter out likely headers/footers and noise
     total_pages = max(e['page'] for e in all_lines) if all_lines else 1
     repeated_threshold = min(3, total_pages)
 
+    elements = []
     for elem in all_lines:
         text = elem['text']
 
