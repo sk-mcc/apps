@@ -165,7 +165,7 @@ const TOOLS = [
 
   {
     name: "Faculty Tools",
-    url: "https://faculty-tools-586.streamlit.app/",
+    url: "https://facultytools.streamlit.app/",
     icon: "calendar",
     description: "Calendar and schedule processing tools for faculty."
   },
