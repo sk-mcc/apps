@@ -75,35 +75,60 @@
 }
 
 /* ───────────────────────────────────────────────────────────────────────────
-   DARK MODE (Auto-detected)
+   DARK MODE (Auto-detected and manual toggle)
    Background: deep charcoal (#161616) - not pure black, easier on eyes
    Text: soft white (#f0f0f0) - 12.6:1 contrast ratio (AAA)
    ─────────────────────────────────────────────────────────────────────────── */
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --color-bg-page: #161616;
     --color-bg-card: #1e1e1e;
     --color-bg-card-hover: #262626;
     --color-border: #333333;
     --color-border-hover: #444444;
-    
+
     --color-text-primary: #f0f0f0;
     --color-text-secondary: #c8c8c8;
     --color-text-muted: #a0a0a0;
-    
+
     --color-accent: #7eb8db;
     --color-accent-hover: #a5d0eb;
     --color-accent-light: rgba(126, 184, 219, 0.15);
-    
+
     --color-icon: #7eb8db;
     --color-icon-bg: rgba(126, 184, 219, 0.12);
-    
+
     --color-focus: #7eb8db;
-    
+
     --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
     --shadow-card-hover: 0 10px 25px rgba(0, 0, 0, 0.4), 0 4px 10px rgba(0, 0, 0, 0.3);
   }
+}
+
+/* Manual dark mode override */
+[data-theme="dark"] {
+  --color-bg-page: #161616;
+  --color-bg-card: #1e1e1e;
+  --color-bg-card-hover: #262626;
+  --color-border: #333333;
+  --color-border-hover: #444444;
+
+  --color-text-primary: #f0f0f0;
+  --color-text-secondary: #c8c8c8;
+  --color-text-muted: #a0a0a0;
+
+  --color-accent: #7eb8db;
+  --color-accent-hover: #a5d0eb;
+  --color-accent-light: rgba(126, 184, 219, 0.15);
+
+  --color-icon: #7eb8db;
+  --color-icon-bg: rgba(126, 184, 219, 0.12);
+
+  --color-focus: #7eb8db;
+
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-card-hover: 0 10px 25px rgba(0, 0, 0, 0.4), 0 4px 10px rgba(0, 0, 0, 0.3);
 }
 
 /* ───────────────────────────────────────────────────────────────────────────
@@ -136,6 +161,7 @@ body {
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color var(--transition-base), color var(--transition-base);
 }
 
 /* ───────────────────────────────────────────────────────────────────────────
@@ -223,9 +249,42 @@ body {
 }
 
 @media (prefers-color-scheme: dark) {
-  .tool-count {
+  :root:not([data-theme="light"]) .tool-count {
     color: var(--color-accent);
   }
+}
+
+[data-theme="dark"] .tool-count {
+  color: var(--color-accent);
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   THEME TOGGLE
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.theme-toggle {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: 2rem;
+  padding: 0.25rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: background-color var(--transition-base), border-color var(--transition-base);
+}
+
+.theme-toggle span {
+  padding: 0.35rem 0.6rem;
+  border-radius: 1.5rem;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.theme-toggle span.active {
+  background: var(--color-accent);
+  color: white;
 }
 
 /* ───────────────────────────────────────────────────────────────────────────
