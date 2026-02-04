@@ -594,6 +594,8 @@ if uploaded_file:
             elements = detect_heading_hierarchy(elements)
             # Second pass: merge consecutive headings that got split
             elements = merge_consecutive_headings(elements)
+            # Re-detect hierarchy after merging (font size tiers may have changed)
+            elements = detect_heading_hierarchy(elements)
             st.session_state.text_elements = elements
 
             # Try to detect title from first H1
