@@ -302,8 +302,19 @@ def analyze_pdf_structure(pdf_bytes):
         if text_page_counts[text] >= repeated_threshold:
             continue
 
-        # Skip standalone page numbers (just digits, maybe with punctuation)
-        if text.strip('.-– ').isdigit() and len(text) < 10:
+        # Skip standalone page numbers and short numeric patterns
+        stripped = text.strip('.-–— ·•')
+        # Pure digits
+        if stripped.isdigit() and len(stripped) < 5:
+            continue
+        # Roman numerals (common for front matter)
+        if stripped.lower() in ['i', 'ii', 'iii', 'iv', 'v', 'vi', 'vii', 'viii', 'ix', 'x',
+                                 'xi', 'xii', 'xiii', 'xiv', 'xv', 'xvi', 'xvii', 'xviii', 'xix', 'xx']:
+            continue
+        # "Page X" or "X of Y" patterns
+        if text.lower().startswith('page ') and len(text) < 15:
+            continue
+        if ' of ' in text.lower() and len(text) < 15 and any(c.isdigit() for c in text):
             continue
 
         # Skip very short fragments (likely artifacts)
@@ -372,6 +383,37 @@ def get_body_text_sample(elements, max_items=5):
     """Return a sample of body text elements for 'promote to heading' feature"""
     body = [e for e in elements if e['user_tag'] == 'Body Text' and e['char_count'] < 100]
     return body[:max_items]
+
+
+def normalize_heading_hierarchy(elements):
+    """Ensure heading levels don't skip (H1 -> H3 becomes H1 -> H2 for accessibility)"""
+    if not elements:
+        return elements
+
+    # Track the deepest heading level we've properly reached
+    # Start at 0 (no heading seen yet), H1=1, H2=2, H3=3
+    max_level_seen = 0
+
+    for elem in elements:
+        tag = elem['user_tag']
+
+        if tag in ['H1', 'H2', 'H3']:
+            current_level = int(tag[1])  # 1, 2, or 3
+
+            # What's the deepest we're allowed to go? (one more than max seen)
+            allowed_level = max_level_seen + 1
+
+            if current_level > allowed_level:
+                # This heading skips a level, adjust it
+                elem['user_tag'] = f'H{allowed_level}'
+                elem['suggested_tag'] = elem['user_tag']
+                current_level = allowed_level
+
+            # Update max level seen (but don't go backwards)
+            if current_level > max_level_seen:
+                max_level_seen = current_level
+
+    return elements
 
 
 def generate_standalone_html(elements, title):
@@ -621,6 +663,8 @@ if uploaded_file:
             elements = merge_consecutive_headings(elements)
             # Re-detect hierarchy after merging (font size tiers may have changed)
             elements = detect_heading_hierarchy(elements)
+            # Final pass: ensure no heading levels are skipped (accessibility)
+            elements = normalize_heading_hierarchy(elements)
             st.session_state.text_elements = elements
 
             # Try to detect title from first H1
