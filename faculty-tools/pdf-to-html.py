@@ -448,7 +448,7 @@ def normalize_heading_hierarchy(elements):
     levels_used = set()
     for elem in elements:
         tag = elem['user_tag']
-        if tag and tag[0] == 'H' and tag[1:].isdigit():
+        if tag and len(tag) >= 2 and tag[0] == 'H' and tag[1:].isdigit():
             levels_used.add(int(tag[1:]))
 
     if not levels_used:
@@ -457,16 +457,19 @@ def normalize_heading_hierarchy(elements):
     # Create a mapping from old levels to new sequential levels
     # e.g., if document has H1, H3, H4 -> map {1: 1, 3: 2, 4: 3}
     sorted_levels = sorted(levels_used)
-    level_map = {old_level: new_level for new_level, old_level in enumerate(sorted_levels, start=1)}
+    level_map = {}
+    for new_level, old_level in enumerate(sorted_levels, start=1):
+        level_map[old_level] = new_level
 
     # Apply the mapping to all headings
     for elem in elements:
         tag = elem['user_tag']
-        if tag and tag[0] == 'H' and tag[1:].isdigit():
+        if tag and len(tag) >= 2 and tag[0] == 'H' and tag[1:].isdigit():
             old_level = int(tag[1:])
-            new_level = level_map[old_level]
-            elem['user_tag'] = f'H{new_level}'
-            elem['suggested_tag'] = elem['user_tag']
+            if old_level in level_map:
+                new_level = level_map[old_level]
+                elem['user_tag'] = f'H{new_level}'
+                elem['suggested_tag'] = elem['user_tag']
 
     return elements
 
