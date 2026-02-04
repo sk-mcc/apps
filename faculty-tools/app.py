@@ -181,31 +181,16 @@ if tool_choice == "Home":
             st.session_state.nav_to = "Date Shifter & Calculator"
             st.rerun()
 
-    # --- Standalone Tools Section ---
-    st.markdown("### Standalone Tools")
-    st.caption("These tools run entirely in your browser - no server required.")
-
-    col3, col4 = st.columns(2)
-
-    with col3:
-        st.markdown("""
-        <a href="door-sign.html" target="_blank" class="tool-card-link">
-            <div class="tool-card">
-                <h3>Door Sign Generator</h3>
-                <p>Create a visual weekly schedule for your office door from Self-Service data.</p>
-            </div>
-        </a>
-        """, unsafe_allow_html=True)
-
-    with col4:
-        st.markdown("""
-        <a href="assignment-sheet.html" target="_blank" class="tool-card-link">
-            <div class="tool-card">
-                <h3>Assignment Sheet Helper</h3>
-                <p>Convert Self-Service schedule into Faculty Assignment Sheet (FAS) table format.</p>
-            </div>
-        </a>
-        """, unsafe_allow_html=True)
+    # --- Link to Faculty Apps Hub ---
+    st.markdown("### More Tools")
+    st.markdown("""
+    <a href="https://sk-mcc.github.io/apps/" target="_blank" class="tool-card-link">
+        <div class="tool-card">
+            <h3>Faculty Apps Hub →</h3>
+            <p>Browse all faculty tools including Door Sign Generator, Assignment Sheet Helper, QuickPoll, and more.</p>
+        </div>
+    </a>
+    """, unsafe_allow_html=True)
 
 # ==========================================
 # TOOL 1: SYLLABUS SCHEDULE
