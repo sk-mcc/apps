@@ -459,9 +459,19 @@ def normalize_heading_hierarchy(elements):
     if not elements:
         return elements
 
-    # Track the deepest level we've properly reached in sequence
-    # After seeing H1, only H1 and H2 are allowed
-    # After seeing H2, H3 becomes allowed, etc.
+    # First pass: check if H3s vastly outnumber H2s (detection probably wrong)
+    # If so, promote all H3s to H2 before doing sequential normalization
+    h2_count = sum(1 for e in elements if e.get('user_tag') == 'H2')
+    h3_count = sum(1 for e in elements if e.get('user_tag') == 'H3')
+
+    # If there are many H3s but few H2s, they're probably all the same level
+    if h3_count > 2 and h2_count <= 2 and h3_count > h2_count * 2:
+        for elem in elements:
+            if elem.get('user_tag') == 'H3':
+                elem['user_tag'] = 'H2'
+                elem['suggested_tag'] = 'H2'
+
+    # Second pass: ensure no skipped levels in sequence
     max_level_allowed = 1  # Start: only H1 is allowed
 
     for elem in elements:
