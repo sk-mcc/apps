@@ -459,19 +459,33 @@ def generate_standalone_html(elements, title):
         '    <main>'
     ]
 
-    # Group consecutive body text into paragraphs
+    # Group consecutive body text into paragraphs, detecting breaks via vertical gaps
     current_paragraph = []
+    last_body_elem = None
 
     for elem in elements:
         tag = elem['user_tag']
         text = html.escape(elem['text'])
 
         if tag == 'Body Text':
+            # Check if this is a new paragraph (large vertical gap from previous line)
+            if last_body_elem is not None and current_paragraph:
+                y_gap = elem['y_position'] - last_body_elem['y_position']
+                line_height = last_body_elem['font_size'] * 1.5  # Typical line spacing
+                # If gap is more than 2x normal line height, it's a new paragraph
+                if y_gap > line_height * 2 or elem['page'] != last_body_elem['page']:
+                    # Flush current paragraph
+                    html_parts.append(f'        <p>{" ".join(current_paragraph)}</p>')
+                    current_paragraph = []
+
             current_paragraph.append(text)
+            last_body_elem = elem
         else:
             # Flush paragraph if we have one
             if current_paragraph:
                 html_parts.append(f'        <p>{" ".join(current_paragraph)}</p>')
+                current_paragraph = []
+                last_body_elem = None
                 current_paragraph = []
 
             # Add heading
@@ -499,6 +513,7 @@ def generate_canvas_html(elements):
     """Generate Canvas-compatible HTML (headers start at H2)"""
     html_parts = []
     current_paragraph = []
+    last_body_elem = None
 
     # Map heading levels down by one (H1->H2, H2->H3, H3->H4)
     tag_map = {
@@ -513,12 +528,22 @@ def generate_canvas_html(elements):
         text = html.escape(elem['text'])
 
         if tag == 'Body Text':
+            # Check if this is a new paragraph (large vertical gap from previous line)
+            if last_body_elem is not None and current_paragraph:
+                y_gap = elem['y_position'] - last_body_elem['y_position']
+                line_height = last_body_elem['font_size'] * 1.5
+                if y_gap > line_height * 2 or elem['page'] != last_body_elem['page']:
+                    html_parts.append(f'<p>{" ".join(current_paragraph)}</p>')
+                    current_paragraph = []
+
             current_paragraph.append(text)
+            last_body_elem = elem
         else:
             # Flush paragraph if we have one
             if current_paragraph:
                 html_parts.append(f'<p>{" ".join(current_paragraph)}</p>')
                 current_paragraph = []
+                last_body_elem = None
 
             # Add heading (shifted down one level)
             html_tag = tag_map.get(tag, 'p')
