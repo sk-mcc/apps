@@ -138,6 +138,11 @@ def analyze_pdf_structure(pdf_bytes):
     doc = fitz.open(stream=pdf_bytes, filetype="pdf")
     elements = []
 
+    # Track text that appears on multiple pages (likely headers/footers)
+    text_page_counts = Counter()
+    all_lines = []
+
+    # First pass: collect all lines
     for page_num, page in enumerate(doc):
         blocks = page.get_text("dict")["blocks"]
 
@@ -151,19 +156,46 @@ def analyze_pdf_structure(pdf_bytes):
                         fonts = [span["font"] for span in line["spans"]]
                         is_bold = any("Bold" in font or "bold" in font for font in fonts)
                         is_italic = any("Italic" in font or "Oblique" in font for font in fonts)
+                        y_position = line["bbox"][1]  # Top of line
 
-                        elements.append({
+                        all_lines.append({
                             'page': page_num + 1,
                             'text': line_text,
                             'font_size': max_font_size,
                             'bold': is_bold,
                             'italic': is_italic,
                             'char_count': len(line_text),
+                            'y_position': y_position,
                             'suggested_tag': None,
                             'user_tag': None
                         })
 
+                        # Track for header/footer detection
+                        text_page_counts[line_text] += 1
+
     doc.close()
+
+    # Filter out likely headers/footers (text appearing on 3+ pages)
+    total_pages = max(e['page'] for e in all_lines) if all_lines else 1
+    repeated_threshold = min(3, total_pages)
+
+    for elem in all_lines:
+        text = elem['text']
+
+        # Skip if it appears on multiple pages (header/footer)
+        if text_page_counts[text] >= repeated_threshold:
+            continue
+
+        # Skip standalone page numbers (just digits, maybe with punctuation)
+        if text.strip('.-– ').isdigit() and len(text) < 10:
+            continue
+
+        # Skip very short fragments (likely artifacts)
+        if len(text) < 3:
+            continue
+
+        elements.append(elem)
+
     return elements
 
 
@@ -181,8 +213,8 @@ def detect_heading_hierarchy(elements):
     # Find body text size (most common by character count)
     body_size = size_counts.most_common(1)[0][0] if size_counts else 12
 
-    # Get unique sizes larger than body text
-    larger_sizes = sorted([s for s in size_counts.keys() if s > body_size], reverse=True)
+    # Get unique sizes larger than body text (with some tolerance)
+    larger_sizes = sorted([s for s in size_counts.keys() if s > body_size + 0.5], reverse=True)
 
     # Map sizes to heading levels
     size_to_heading = {}
@@ -194,25 +226,36 @@ def detect_heading_hierarchy(elements):
         rounded_size = round(elem['font_size'] * 2) / 2
         char_count = elem['char_count']
 
-        # Long text is always body
-        if char_count > 300:
+        # Long text is always body (paragraphs)
+        if char_count > 200:
             elem['suggested_tag'] = 'Body Text'
         # Check if it matches a heading size
         elif rounded_size in size_to_heading:
-            elem['suggested_tag'] = size_to_heading[rounded_size]
-        # Short bold text might be a heading even at body size
-        elif elem['bold'] and char_count < 100:
-            # Find the lowest heading level we're using, or H3
-            if larger_sizes:
-                elem['suggested_tag'] = 'H3'
+            # But still require it to be reasonably short
+            if char_count < 150:
+                elem['suggested_tag'] = size_to_heading[rounded_size]
             else:
-                elem['suggested_tag'] = 'H2'
+                elem['suggested_tag'] = 'Body Text'
+        # Short bold text at body size might be a subheading
+        elif elem['bold'] and char_count < 80:
+            elem['suggested_tag'] = 'H3'
         else:
             elem['suggested_tag'] = 'Body Text'
 
         elem['user_tag'] = elem['suggested_tag']
 
     return elements
+
+
+def get_headings_only(elements):
+    """Return only elements tagged as headings"""
+    return [e for e in elements if e['user_tag'] in ['H1', 'H2', 'H3']]
+
+
+def get_body_text_sample(elements, max_items=5):
+    """Return a sample of body text elements for 'promote to heading' feature"""
+    body = [e for e in elements if e['user_tag'] == 'Body Text' and e['char_count'] < 100]
+    return body[:max_items]
 
 
 def generate_standalone_html(elements, title):
@@ -449,81 +492,80 @@ if uploaded_file:
 # Step 2: Review and Edit Tags
 if st.session_state.pdf_uploaded and st.session_state.text_elements:
     st.markdown("---")
-    st.markdown("### Step 2: Review and Adjust Structure")
-    st.markdown("The tool detected headings based on font size. Review and adjust as needed.")
+    st.markdown("### Step 2: Review Document Structure")
 
     # Document title input
     st.session_state.document_title = st.text_input(
-        "Document Title (for HTML export)",
+        "Document Title",
         value=st.session_state.document_title,
-        help="This will be used as the page title in standalone HTML"
+        help="Used as the page title in standalone HTML export"
     )
 
-    # Summary statistics
-    col1, col2, col3, col4 = st.columns(4)
+    # Get headings for review
+    headings = get_headings_only(st.session_state.text_elements)
+
+    # Summary
     h1_count = sum(1 for e in st.session_state.text_elements if e['user_tag'] == 'H1')
     h2_count = sum(1 for e in st.session_state.text_elements if e['user_tag'] == 'H2')
     h3_count = sum(1 for e in st.session_state.text_elements if e['user_tag'] == 'H3')
-    body_count = sum(1 for e in st.session_state.text_elements if e['user_tag'] == 'Body Text')
 
-    with col1:
-        st.metric("H1 Headings", h1_count)
-    with col2:
-        st.metric("H2 Headings", h2_count)
-    with col3:
-        st.metric("H3 Headings", h3_count)
-    with col4:
-        st.metric("Body Text", body_count)
+    st.markdown(f"**Detected {len(headings)} headings** ({h1_count} H1, {h2_count} H2, {h3_count} H3)")
 
-    st.markdown("---")
+    if headings:
+        st.markdown("#### Document Outline")
+        st.caption("Review detected headings. Change the level or set to 'Body Text' to remove from outline.")
 
-    # Filter options
-    filter_option = st.radio(
-        "Show:",
-        ["All Elements", "Only Headings (H1, H2, H3)", "Only Body Text"],
-        horizontal=True
-    )
+        for idx, elem in enumerate(headings):
+            original_idx = st.session_state.text_elements.index(elem)
 
-    # Display text elements for review
-    st.markdown("#### Text Elements")
-    st.caption("Use the dropdown to change element types. Larger font sizes are highlighted.")
+            # Indent based on heading level for visual hierarchy
+            indent = ""
+            if elem['user_tag'] == 'H2':
+                indent = "&nbsp;&nbsp;&nbsp;&nbsp;"
+            elif elem['user_tag'] == 'H3':
+                indent = "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"
 
-    elements_to_show = st.session_state.text_elements
-    if filter_option == "Only Headings (H1, H2, H3)":
-        elements_to_show = [e for e in elements_to_show if e['user_tag'] in ['H1', 'H2', 'H3']]
-    elif filter_option == "Only Body Text":
-        elements_to_show = [e for e in elements_to_show if e['user_tag'] == 'Body Text']
+            col1, col2 = st.columns([4, 1])
 
-    for idx, elem in enumerate(elements_to_show):
-        original_idx = st.session_state.text_elements.index(elem)
+            with col1:
+                display_text = elem['text'][:80] + ('...' if len(elem['text']) > 80 else '')
+                st.markdown(f"{indent}**{html.escape(display_text)}** <small style='color:#64748b;'>p.{elem['page']}</small>", unsafe_allow_html=True)
 
-        col1, col2, col3 = st.columns([3, 2, 1])
+            with col2:
+                new_tag = st.selectbox(
+                    "Level",
+                    ["H1", "H2", "H3", "Body Text"],
+                    index=["H1", "H2", "H3", "Body Text"].index(elem['user_tag']),
+                    key=f"tag_{original_idx}",
+                    label_visibility="collapsed"
+                )
+                st.session_state.text_elements[original_idx]['user_tag'] = new_tag
+    else:
+        st.warning("No headings detected. The document may not have text larger than body size.")
 
-        with col1:
-            st.markdown(f"""
-                <div class="text-preview">
-                    <small>Page {elem['page']} • {elem['font_size']:.1f}pt{' • Bold' if elem['bold'] else ''}</small><br>
-                    {html.escape(elem['text'][:200])}{'...' if len(elem['text']) > 200 else ''}
-                </div>
-            """, unsafe_allow_html=True)
+    # Option to promote missed headings
+    with st.expander("Missed a heading? Promote text to heading"):
+        st.caption("If an important heading wasn't detected, you can promote it here.")
 
-        with col2:
-            new_tag = st.selectbox(
-                "Tag Type",
-                ["H1", "H2", "H3", "Body Text"],
-                index=["H1", "H2", "H3", "Body Text"].index(elem['user_tag']),
-                key=f"tag_{original_idx}",
-                label_visibility="collapsed"
-            )
-            st.session_state.text_elements[original_idx]['user_tag'] = new_tag
+        # Show short body text that might be headings
+        body_candidates = [e for e in st.session_state.text_elements
+                          if e['user_tag'] == 'Body Text' and 10 < e['char_count'] < 100]
 
-        with col3:
-            suggested = elem['suggested_tag']
-            if suggested != new_tag:
-                st.caption(f"(was: {suggested})")
+        if body_candidates:
+            for idx, elem in enumerate(body_candidates[:15]):  # Show up to 15 candidates
+                original_idx = st.session_state.text_elements.index(elem)
 
-        if idx < len(elements_to_show) - 1:
-            st.markdown("<hr style='margin: 0.5rem 0; border: none; border-top: 1px solid #e2e8f0;'>", unsafe_allow_html=True)
+                col1, col2 = st.columns([4, 1])
+
+                with col1:
+                    st.markdown(f"<small style='color:#64748b;'>p.{elem['page']}</small> {html.escape(elem['text'][:60])}", unsafe_allow_html=True)
+
+                with col2:
+                    if st.button("→ H2", key=f"promote_{original_idx}"):
+                        st.session_state.text_elements[original_idx]['user_tag'] = 'H2'
+                        st.rerun()
+        else:
+            st.caption("No short text segments found to promote.")
 
     st.markdown("---")
 
