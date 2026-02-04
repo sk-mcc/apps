@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Door Sign Generator</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🚪</text></svg>">
+    <style>
+        :root {
+            --bg-primary: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-input: #ffffff;
+            --color-accent: #0891b2;
+            --color-accent-hover: #0e7490;
+            --color-text: #1e293b;
+            --color-text-dim: #64748b;
+            --border-color: #e2e8f0;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1);
+            --instruction-bg: #f0f9ff;
+            --success-bg: #ecfdf5;
+            --success-border: #a7f3d0;
+            --success-text: #065f46;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0a0f1a;
+            --bg-card: #111827;
+            --bg-input: #1f2937;
+            --color-accent: #22d3ee;
+            --color-accent-hover: #67e8f9;
+            --color-text: #f1f5f9;
+            --color-text-dim: #94a3b8;
+            --border-color: #374151;
+            --shadow: 0 1px 3px rgba(0,0,0,0.4);
+            --instruction-bg: #0c1929;
+            --success-bg: #022c22;
+            --success-border: #047857;
+            --success-text: #a7f3d0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--color-text);
+            line-height: 1.6;
+            padding: 2rem;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.5rem;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .theme-toggle {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 2rem;
+            padding: 0.25rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        .theme-toggle span {
+            padding: 0.35rem 0.6rem;
+            border-radius: 1.5rem;
+            font-size: 0.85rem;
+            transition: background-color 0.2s;
+        }
+
+        .theme-toggle span.active {
+            background: var(--color-accent);
+            color: white;
+        }
+
+        .subtitle {
+            color: var(--color-text-dim);
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        .instruction-box {
+            background-color: var(--instruction-bg);
+            border-left: 4px solid var(--color-accent);
+            padding: 0.75rem 1rem;
+            border-radius: 0 0.5rem 0.5rem 0;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+        }
+
+        .instruction-box ul {
+            margin: 0;
+            padding-left: 1.25rem;
+        }
+
+        .instruction-box li {
+            margin-bottom: 0.15rem;
+        }
+
+        .instruction-box li:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        .label-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .help-btn {
+            background: none;
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            color: var(--color-text-dim);
+            transition: background-color 0.2s, border-color 0.3s;
+        }
+
+        .help-btn:hover {
+            background: var(--border-color);
+        }
+
+        .help-text {
+            display: none;
+            font-size: 0.85rem;
+            color: var(--color-text-dim);
+            background: var(--bg-primary);
+            padding: 0.75rem;
+            border-radius: 0.25rem;
+            margin-bottom: 0.5rem;
+            transition: background-color 0.3s;
+        }
+
+        .help-text.show {
+            display: block;
+        }
+
+        textarea, input[type="text"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            font-family: inherit;
+            font-size: 0.95rem;
+            background: var(--bg-input);
+            color: var(--color-text);
+            resize: vertical;
+            transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+        }
+
+        textarea:focus, input:focus {
+            outline: none;
+            border-color: var(--color-accent);
+            box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.1);
+        }
+
+        textarea {
+            min-height: 120px;
+        }
+
+        .btn {
+            background: var(--color-accent);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: var(--color-accent-hover);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--color-accent);
+            border: 1px solid var(--color-accent);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(8, 145, 178, 0.1);
+        }
+
+        .result-section {
+            display: none;
+        }
+
+        .result-section.show {
+            display: block;
+        }
+
+        .preview-frame {
+            width: 100%;
+            height: 700px;
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            background: white;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .button-row .btn {
+            flex: 1;
+        }
+
+        .success-msg {
+            background: var(--success-bg);
+            border: 1px solid var(--success-border);
+            color: var(--success-text);
+            padding: 0.75rem 1rem;
+            border-radius: 0.375rem;
+            margin-bottom: 1rem;
+            transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+        }
+
+        .collapsible-header {
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .collapsible-header::after {
+            content: '▼';
+            font-size: 0.75rem;
+            transition: transform 0.2s;
+        }
+
+        .collapsible-header.collapsed::after {
+            transform: rotate(-90deg);
+        }
+
+        .collapsible-content {
+            margin-top: 1rem;
+        }
+
+        .collapsible-content.hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-row">
+        <h1>Door Sign Generator</h1>
+        <div class="theme-toggle" onclick="toggleTheme()">
+            <span id="theme-light">Light</span>
+            <span id="theme-dark">Dark</span>
+        </div>
+    </div>
+    <p class="subtitle">Generate a visual weekly schedule for your office door</p>
+
+    <div class="card">
+        <div class="collapsible-header collapsed" onclick="toggleInstructions()">
+            <strong>How to Use This Tool</strong>
+        </div>
+        <div id="instructions" class="collapsible-content hidden">
+            <div class="instruction-box">
+                <ul>
+                    <li>Sections starting with S, C, or H appear on the timetable</li>
+                    <li>Sections starting with O are listed as online classes</li>
+                    <li>Overlapping sections are automatically merged</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="form-group">
+            <label for="schedule-input">1. Paste Class Schedule from Self-Service (no cleanup is needed):</label>
+            <textarea id="schedule-input" placeholder="ENGL-1181-S1601
+M/W 12:00 PM - 1:55 PM
+ENGL-1181-S1602
+M/W 12:00 PM - 1:55 PM"></textarea>
+        </div>
+
+        <div class="form-group">
+            <div class="label-row">
+                <label for="oh-input" style="margin-bottom: 0;">2. Office Hours:</label>
+                <button class="help-btn" onclick="toggleHelp()">?</button>
+            </div>
+            <div id="oh-help" class="help-text">
+                <strong>Supported formats:</strong><br>
+                M-Th 11-1, Fri 9-10 &bull; Mon/Wed 10-12 &bull; Virtual Tue 5-6<br><br>
+                <strong>Tips:</strong> Use commas/semicolons to separate slots. Add "virtual" to mark virtual hours.
+            </div>
+            <input type="text" id="oh-input" placeholder="M-Th 11-1, Fri 9-10">
+        </div>
+
+        <div class="form-group">
+            <label for="title-input">3. Page Title:</label>
+            <input type="text" id="title-input" value="Winter 2026 Schedule">
+        </div>
+
+        <button class="btn" onclick="generateDoorSign()">Generate Door Sign</button>
+    </div>
+
+    <div id="result-section" class="result-section">
+        <div class="card">
+            <div class="success-msg">Door sign generated successfully!</div>
+
+            <label>Preview:</label>
+            <iframe id="preview-frame" class="preview-frame"></iframe>
+
+            <div class="button-row">
+                <button class="btn" onclick="downloadHTML()">Download HTML</button>
+                <button class="btn btn-secondary" onclick="printSign()">Print</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// === THEME MANAGEMENT ===
+function initTheme() {
+    const saved = localStorage.getItem('door-sign-theme');
+    if (saved) {
+        setTheme(saved);
+    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        setTheme('dark');
+    } else {
+        setTheme('light');
+    }
+}
+
+function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    document.getElementById('theme-light').classList.toggle('active', theme === 'light');
+    document.getElementById('theme-dark').classList.toggle('active', theme === 'dark');
+    localStorage.setItem('door-sign-theme', theme);
+}
+
+function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme');
+    setTheme(current === 'dark' ? 'light' : 'dark');
+}
+
+// Initialize theme on load
+initTheme();
+
+// === CONSTANTS ===
+const MONTHS = ["", "January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"];
+
+const DAY_MAP_LIST = ['M', 'T', 'W', 'Th', 'F'];
+const DAY_NAME_TO_IDX = {
+    'MONDAY': 0, 'MON': 0, 'M': 0,
+    'TUESDAY': 1, 'TUE': 1, 'T': 1,
+    'WEDNESDAY': 2, 'WED': 2, 'W': 2,
+    'THURSDAY': 3, 'THU': 3, 'TH': 3, 'R': 3,
+    'FRIDAY': 4, 'FRI': 4, 'F': 4
+};
+
+let generatedHTML = '';
+
+// === UI FUNCTIONS ===
+function toggleInstructions() {
+    const header = document.querySelector('.collapsible-header');
+    const content = document.getElementById('instructions');
+    header.classList.toggle('collapsed');
+    content.classList.toggle('hidden');
+}
+
+function toggleHelp() {
+    document.getElementById('oh-help').classList.toggle('show');
+}
+
+// === PARSING FUNCTIONS ===
+function getMinutes(timeStr) {
+    timeStr = timeStr.toUpperCase().trim();
+
+    if (!timeStr.includes(':')) {
+        const val = parseInt(timeStr);
+        if (isNaN(val)) return 0;
+        if (val === 12) return 12 * 60;
+        if (val >= 1 && val <= 7) return (val + 12) * 60;
+        return val * 60;
+    }
+
+    try {
+        const parts = timeStr.split(/[: ]+/);
+        let h = parseInt(parts[0]);
+        const m = parseInt(parts[1]);
+        const isPM = timeStr.includes('PM');
+        const isAM = timeStr.includes('AM');
+
+        if (isPM && h !== 12) h += 12;
+        if (isAM && h === 12) h = 0;
+
+        return h * 60 + m;
+    } catch {
+        return 0;
+    }
+}
+
+function parseOHTimeFlexible(timeStr) {
+    timeStr = timeStr.trim().toUpperCase();
+
+    const match = timeStr.match(/(\d{1,2})(?::(\d{2}))?\s*(AM|PM)?/);
+    if (match) {
+        let h = parseInt(match[1]);
+        const m = match[2] ? parseInt(match[2]) : 0;
+        const period = match[3];
+
+        if (period === 'PM' && h !== 12) h += 12;
+        else if (period === 'AM' && h === 12) h = 0;
+        else if (!period && h >= 1 && h <= 7) h += 12;
+
+        return h * 60 + m;
+    }
+    return 0;
+}
+
+function extractTimeRanges(text) {
+    const ranges = [];
+    const textUpper = text.toUpperCase();
+    const isVirtual = textUpper.includes('VIRTUAL');
+
+    const timeRangePattern = /(\d{1,2}(?::\d{2})?\s*(?:AM|PM)?)\s*[-–—]\s*(\d{1,2}(?::\d{2})?\s*(?:AM|PM)?)/gi;
+
+    let match;
+    while ((match = timeRangePattern.exec(text)) !== null) {
+        let startStr = match[1].trim();
+        let endStr = match[2].trim();
+
+        const endPeriodMatch = endStr.match(/(AM|PM)/i);
+        const startPeriodMatch = startStr.match(/(AM|PM)/i);
+
+        if (endPeriodMatch && !startPeriodMatch) {
+            startStr = startStr + ' ' + endPeriodMatch[1];
+        }
+
+        let sMin = parseOHTimeFlexible(startStr);
+        let eMin = parseOHTimeFlexible(endStr);
+
+        if (eMin <= sMin) eMin += 12 * 60;
+
+        if (sMin > 0 && eMin > sMin) {
+            ranges.push({ start: sMin, end: eMin, isVirtual });
+        }
+    }
+
+    return ranges;
+}
+
+function extractDays(text) {
+    const textUpper = text.toUpperCase();
+    const foundDays = [];
+
+    // Check for day ranges like "M-TH"
+    const rangePattern = /\b(MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|MON|TUE|WED|THU|FRI|M|T|W|TH|R|F)\s*[-–—]\s*(MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|MON|TUE|WED|THU|FRI|M|T|W|TH|R|F)\b/;
+    const rangeMatch = textUpper.match(rangePattern);
+
+    if (rangeMatch) {
+        const startDay = rangeMatch[1];
+        const endDay = rangeMatch[2];
+        const startIdx = DAY_NAME_TO_IDX[startDay];
+        const endIdx = DAY_NAME_TO_IDX[endDay];
+        if (startIdx !== undefined && endIdx !== undefined) {
+            return DAY_MAP_LIST.slice(startIdx, endIdx + 1);
+        }
+    }
+
+    // Check for slash-separated days
+    const slashPattern = /\b(MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|MON|TUE|WED|THU|FRI|M|T|W|TH|R|F)(?:\s*\/\s*(MONDAY|TUESDAY|WEDNESDAY|THURSDAY|FRIDAY|MON|TUE|WED|THU|FRI|M|T|W|TH|R|F))+\b/;
+    const slashMatch = textUpper.match(slashPattern);
+    if (slashMatch) {
+        const slashText = slashMatch[0];
+        for (const dayName of slashText.split(/\s*\/\s*/)) {
+            const trimmed = dayName.trim();
+            if (trimmed in DAY_NAME_TO_IDX) {
+                const d = DAY_MAP_LIST[DAY_NAME_TO_IDX[trimmed]];
+                if (!foundDays.includes(d)) foundDays.push(d);
+            }
+        }
+        if (foundDays.length) return foundDays;
+    }
+
+    // Check for individual day names
+    for (const dayName of ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'TH']) {
+        if (textUpper.includes(dayName)) {
+            const d = DAY_MAP_LIST[DAY_NAME_TO_IDX[dayName]];
+            if (!foundDays.includes(d)) foundDays.push(d);
+        }
+    }
+
+    // Check single letters only if no full names found
+    if (!foundDays.length) {
+        for (const [letter, idx] of [['M', 0], ['T', 1], ['W', 2], ['R', 3], ['F', 4]]) {
+            if (new RegExp(`\\b${letter}\\b`).test(textUpper)) {
+                const d = DAY_MAP_LIST[idx];
+                if (!foundDays.includes(d)) foundDays.push(d);
+            }
+        }
+    }
+
+    return foundDays;
+}
+
+// === MAIN GENERATION FUNCTION ===
+function generateDoorSign() {
+    const rawSchedule = document.getElementById('schedule-input').value;
+    const ohText = document.getElementById('oh-input').value;
+    const titleText = document.getElementById('title-input').value;
+
+    if (!rawSchedule.trim()) {
+        alert('Please paste your schedule.');
+        return;
+    }
+
+    const events = [];
+    const onlineData = {};
+    const lines = rawSchedule.split('\n');
+    let currentClassName = null;
+    let currentSection = null;
+
+    // Parse schedule
+    for (const line of lines) {
+        const trimmedLine = line.trim();
+        if (!trimmedLine) continue;
+
+        // Identify Class + Section
+        const classMatch = trimmedLine.match(/ENGL[- ](\d+)[- ]([A-Z0-9]+)/);
+        if (classMatch) {
+            currentClassName = `ENGL ${classMatch[1]}`;
+            currentSection = classMatch[2];
+            const fullCode = `${currentClassName} ${currentSection}`;
+            if (currentSection.startsWith('O')) {
+                if (!(fullCode in onlineData)) {
+                    onlineData[fullCode] = "";
+                }
+            }
+        }
+
+        // Look for Start Date Month
+        const dateMatch = trimmedLine.match(/(\d{1,2})\/\d{1,2}\/\d{2,4}/);
+        if (dateMatch && currentClassName) {
+            const fullCode = `${currentClassName} ${currentSection}`;
+            if (fullCode in onlineData) {
+                const mIdx = parseInt(dateMatch[1]);
+                onlineData[fullCode] = ` (${MONTHS[mIdx]} start)`;
+            }
+        }
+
+        // Look for Time/Day pattern
+        const tMatch = trimmedLine.match(/([MTWRFSh/]+)\s+(\d{1,2}:\d{2}\s*[AP]M)\s*-\s*(\d{1,2}:\d{2}\s*[AP]M)/i);
+
+        if (tMatch && currentClassName) {
+            const fullCode = `${currentClassName} ${currentSection}`;
+            if (fullCode in onlineData) {
+                delete onlineData[fullCode];
+            }
+
+            // Parse days
+            const daysList = [];
+            const rawDays = tMatch[1].toUpperCase();
+            if (rawDays.includes('M')) daysList.push('M');
+            if (rawDays.includes('T')) daysList.push('T');
+            if (rawDays.includes('W')) daysList.push('W');
+            if (rawDays.includes('R') || rawDays.includes('TH')) daysList.push('Th');
+            if (rawDays.includes('F')) daysList.push('F');
+
+            const startVal = getMinutes(tMatch[2]);
+            const endVal = getMinutes(tMatch[3]);
+
+            // Determine location
+            const roomMatch = trimmedLine.match(/\b([A-Z]{1,3}-\d{3,4})\b/);
+            let loc = "";
+            if (trimmedLine.toLowerCase().includes('remote')) {
+                loc = "Remote";
+            } else if (roomMatch) {
+                loc = roomMatch[1];
+            }
+
+            // Check for duplicates and merge
+            let duplicateFound = false;
+            for (const existing of events) {
+                if (existing.start === startVal &&
+                    existing.end === endVal &&
+                    JSON.stringify([...existing.days].sort()) === JSON.stringify([...daysList].sort())) {
+                    if (existing.name.includes(currentClassName)) {
+                        if (!existing.name.includes(currentSection)) {
+                            existing.name += `/${currentSection}`;
+                        }
+                        duplicateFound = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!duplicateFound) {
+                events.push({
+                    type: "class",
+                    name: fullCode,
+                    days: daysList,
+                    start: startVal,
+                    end: endVal,
+                    loc: loc
+                });
+            }
+        }
+    }
+
+    // Parse Office Hours
+    let ohSegments = [];
+
+    if (/\b(Monday|Tuesday|Wednesday|Thursday|Friday)\s*:/i.test(ohText)) {
+        const dayLabelPattern = /((?:Monday|Tuesday|Wednesday|Thursday|Friday)\s*:)/gi;
+        const parts = ohText.split(dayLabelPattern);
+
+        let currentDay = null;
+        for (const part of parts) {
+            const trimmed = part.trim();
+            if (!trimmed) continue;
+            if (/^(Monday|Tuesday|Wednesday|Thursday|Friday)\s*:$/i.test(trimmed)) {
+                currentDay = trimmed.replace(':', '').trim();
+            } else if (currentDay) {
+                for (const timeSlot of trimmed.split(';')) {
+                    const slot = timeSlot.trim();
+                    if (slot) ohSegments.push(`${currentDay} ${slot}`);
+                }
+            }
+        }
+    } else {
+        for (const segment of ohText.split(/[;,]/)) {
+            const trimmed = segment.trim();
+            if (trimmed) ohSegments.push(trimmed);
+        }
+    }
+
+    for (const segment of ohSegments) {
+        if (!segment) continue;
+
+        const foundDays = extractDays(segment);
+        const timeRanges = extractTimeRanges(segment);
+
+        for (const { start: sMin, end: eMin, isVirtual } of timeRanges) {
+            if (foundDays.length && sMin > 0) {
+                events.push({
+                    type: "oh",
+                    name: isVirtual ? "Virtual Office Hours" : "Office Hours",
+                    days: foundDays,
+                    start: sMin,
+                    end: eMin,
+                    loc: ""
+                });
+            }
+        }
+    }
+
+    // Generate HTML
+    let startHr, endHr;
+    if (events.length) {
+        const allTimes = events.flatMap(e => [e.start, e.end]);
+        startHr = Math.max(0, Math.floor(Math.min(...allTimes) / 60) - 1);
+        endHr = Math.min(23, Math.floor(Math.max(...allTimes) / 60) + 1);
+    } else {
+        startHr = 9;
+        endHr = 17;
+    }
+
+    const hasFriday = events.some(ev => ev.days.includes('F'));
+    const numDayCols = hasFriday ? 5 : 4;
+    const dayHeaders = hasFriday ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] : ['Mon', 'Tue', 'Wed', 'Thu'];
+
+    const totalSlots = (endHr - startHr) * 4;
+    let htmlEvents = "";
+    const colorsCool = ["#e8f4f8", "#e3f2fd", "#e0f2f1", "#f3e5f5", "#fff3e0", "#f1f8e9"];
+    const colorMap = {};
+    const colMap = hasFriday
+        ? { "M": 2, "T": 3, "W": 4, "Th": 5, "F": 6 }
+        : { "M": 2, "T": 3, "W": 4, "Th": 5 };
+
+    for (const ev of events) {
+        const startOff = ev.start - (startHr * 60);
+        const endOff = ev.end - (startHr * 60);
+        const rowS = Math.floor(startOff / 15) + 2;
+        const rowSpan = Math.max(1, Math.floor((endOff - startOff) / 15));
+
+        let bg, border;
+        if (ev.type === 'oh') {
+            bg = "#fff8e1";
+            border = "#d84315";
+        } else {
+            if (!(ev.name in colorMap)) {
+                colorMap[ev.name] = colorsCool[Object.keys(colorMap).length % colorsCool.length];
+            }
+            bg = colorMap[ev.name];
+            border = "#546e7a";
+        }
+
+        for (const d of ev.days) {
+            if (d in colMap) {
+                const locH = ev.loc ? `<br>${ev.loc}` : "";
+                htmlEvents += `<div class="event" style="grid-column:${colMap[d]}; grid-row:${rowS}/span ${rowSpan}; background:${bg}; border-left:4px solid ${border}; color:#000;"><strong>${ev.name}</strong>${locH}</div>`;
+            }
+        }
+    }
+
+    // Generate time labels
+    let htmlTimes = "";
+    for (let h = startHr; h <= endHr; h++) {
+        const r = (h - startHr) * 4 + 2;
+        const hourLabel = `${h % 12 || 12} ${h < 12 ? 'AM' : 'PM'}`;
+        if (h > startHr) {
+            htmlTimes += `<div class="time-label" style="grid-row:${r};">${hourLabel}</div>`;
+        }
+        htmlTimes += `<div class="grid-line" style="grid-row:${r};"></div>`;
+    }
+
+    // Online classes section
+    const onlineList = Object.entries(onlineData).map(([k, v]) => `${k}${v}`);
+    let onlineHtml = "";
+    if (onlineList.length) {
+        onlineHtml = `<div style='margin-top:30px; border-top:2px solid #eee; padding-top:10px; width:100%; max-width:850px; text-align:center;'><strong>Online Classes:</strong><br>${onlineList.join(', ')}</div>`;
+    }
+
+    const dayHeadersHtml = dayHeaders.map(d => `<div class="header">${d}</div>`).join('\n        ');
+
+    generatedHTML = `<!DOCTYPE html>
+<html>
+<head>
+<style>
+    body {
+        font-family: 'Segoe UI', sans-serif;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    h1 {
+        text-align: center;
+        font-weight: 300;
+        font-size: 28px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: #37474f;
+        margin-bottom: 24px;
+    }
+    .calendar {
+        display: grid;
+        grid-template-columns: 60px repeat(${numDayCols}, 1fr);
+        grid-template-rows: 35px repeat(${totalSlots}, minmax(18px, 1fr));
+        width: 100%;
+        max-width: 850px;
+        min-height: 75vh;
+        border: none;
+    }
+    .header {
+        font-weight: 600;
+        text-align: center;
+        border-bottom: 1px solid #ccc;
+        font-size: 15px;
+        padding-top: 5px;
+        color: #455a64;
+    }
+    .time-label {
+        font-size: 10px;
+        color: #444;
+        text-align: right;
+        padding-right: 12px;
+        transform: translateY(-50%);
+    }
+    .grid-line {
+        grid-column: 2 / span ${numDayCols};
+        border-top: 1px solid #eee;
+        height: 0;
+    }
+    .event {
+        margin: 1px;
+        padding: 4px;
+        font-size: 11px;
+        border-radius: 0px;
+        line-height: 1.2;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+        overflow: hidden;
+    }
+    @media print {
+        @page { margin: 0.5in; }
+        .calendar { height: auto; }
+    }
+</style>
+</head>
+<body>
+    <h1>${titleText}</h1>
+    <div class="calendar">
+        <div class="header" style="grid-column:1"></div>
+        ${dayHeadersHtml}
+        ${htmlTimes}
+        ${htmlEvents}
+    </div>
+    ${onlineHtml}
+</body>
+</html>`;
+
+    // Show preview
+    const previewFrame = document.getElementById('preview-frame');
+    previewFrame.srcdoc = generatedHTML;
+
+    document.getElementById('result-section').classList.add('show');
+    document.getElementById('result-section').scrollIntoView({ behavior: 'smooth' });
+}
+
+function downloadHTML() {
+    const blob = new Blob([generatedHTML], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'door_sign.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+function printSign() {
+    const previewFrame = document.getElementById('preview-frame');
+    previewFrame.contentWindow.print();
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assignment Sheet Helper</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
+    <style>
+        :root {
+            --bg-primary: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-input: #ffffff;
+            --bg-table-header: #f1f5f9;
+            --bg-table-row-alt: #f8fafc;
+            --color-accent: #0891b2;
+            --color-accent-hover: #0e7490;
+            --color-text: #1e293b;
+            --color-text-dim: #64748b;
+            --border-color: #e2e8f0;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1);
+            --instruction-bg: #f0f9ff;
+            --success-bg: #ecfdf5;
+            --success-border: #a7f3d0;
+            --success-text: #065f46;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0a0f1a;
+            --bg-card: #111827;
+            --bg-input: #1f2937;
+            --bg-table-header: #1e293b;
+            --bg-table-row-alt: #151d2d;
+            --color-accent: #22d3ee;
+            --color-accent-hover: #67e8f9;
+            --color-text: #f1f5f9;
+            --color-text-dim: #94a3b8;
+            --border-color: #374151;
+            --shadow: 0 1px 3px rgba(0,0,0,0.4);
+            --instruction-bg: #0c1929;
+            --success-bg: #022c22;
+            --success-border: #047857;
+            --success-text: #a7f3d0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--color-text);
+            line-height: 1.6;
+            padding: 2rem;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.5rem;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .theme-toggle {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 2rem;
+            padding: 0.25rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        .theme-toggle span {
+            padding: 0.35rem 0.6rem;
+            border-radius: 1.5rem;
+            font-size: 0.85rem;
+            transition: background-color 0.2s;
+        }
+
+        .theme-toggle span.active {
+            background: var(--color-accent);
+            color: white;
+        }
+
+        .subtitle {
+            color: var(--color-text-dim);
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        .instruction-box {
+            background-color: var(--instruction-bg);
+            border-left: 4px solid var(--color-accent);
+            padding: 0.75rem 1rem;
+            border-radius: 0 0.5rem 0.5rem 0;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+        }
+
+        .instruction-box ul {
+            margin: 0;
+            padding-left: 1.25rem;
+        }
+
+        .instruction-box li {
+            margin-bottom: 0.15rem;
+        }
+
+        .instruction-box li:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            font-size: 0.95rem;
+        }
+
+        textarea, input[type="text"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            font-family: inherit;
+            font-size: 0.95rem;
+            background: var(--bg-input);
+            color: var(--color-text);
+            resize: vertical;
+            transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+        }
+
+        textarea:focus, input:focus {
+            outline: none;
+            border-color: var(--color-accent);
+            box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.1);
+        }
+
+        textarea {
+            min-height: 200px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85rem;
+        }
+
+        .btn {
+            background: var(--color-accent);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn:hover {
+            background: var(--color-accent-hover);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-full {
+            width: 100%;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--color-accent);
+            border: 1px solid var(--color-accent);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(8, 145, 178, 0.1);
+        }
+
+        .result-section {
+            display: none;
+        }
+
+        .result-section.show {
+            display: block;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .button-row .btn {
+            flex: 1;
+        }
+
+        .success-msg {
+            background: var(--success-bg);
+            border: 1px solid var(--success-border);
+            color: var(--success-text);
+            padding: 0.75rem 1rem;
+            border-radius: 0.375rem;
+            margin-bottom: 1rem;
+            transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+        }
+
+        .collapsible-header {
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .collapsible-header::after {
+            content: '▼';
+            font-size: 0.75rem;
+            transition: transform 0.2s;
+        }
+
+        .collapsible-header.collapsed::after {
+            transform: rotate(-90deg);
+        }
+
+        .collapsible-content {
+            margin-top: 1rem;
+        }
+
+        .collapsible-content.hidden {
+            display: none;
+        }
+
+        /* Table styles */
+        .table-container {
+            overflow-x: auto;
+            margin-bottom: 1rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        th, td {
+            border: 1px solid var(--border-color);
+            padding: 0.5rem;
+            text-align: left;
+        }
+
+        th {
+            background: var(--bg-table-header);
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        tr:nth-child(even) {
+            background: var(--bg-table-row-alt);
+        }
+
+        td input {
+            width: 100%;
+            padding: 0.25rem;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--color-text);
+            font-family: inherit;
+            font-size: 0.85rem;
+        }
+
+        td input:focus {
+            border-color: var(--color-accent);
+            background: var(--bg-input);
+            outline: none;
+        }
+
+        td input.narrow {
+            width: 50px;
+            text-align: center;
+        }
+
+        td input.time-input {
+            width: 120px;
+        }
+
+        .delete-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-size: 0.75rem;
+        }
+
+        .delete-btn:hover {
+            background: #dc2626;
+        }
+
+        .add-row-btn {
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+            padding: 0.5rem 1rem;
+        }
+
+        /* TSV output */
+        .tsv-section {
+            margin-top: 1.5rem;
+        }
+
+        .tsv-section h3 {
+            font-size: 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .tsv-output {
+            background: var(--bg-input);
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            padding: 1rem;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.8rem;
+            white-space: pre-wrap;
+            word-break: break-all;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .copy-feedback {
+            display: none;
+            color: var(--success-text);
+            font-size: 0.85rem;
+            margin-left: 1rem;
+        }
+
+        .copy-feedback.show {
+            display: inline;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-row">
+        <h1>Assignment Sheet Helper</h1>
+        <div class="theme-toggle" onclick="toggleTheme()">
+            <span id="theme-light">Light</span>
+            <span id="theme-dark">Dark</span>
+        </div>
+    </div>
+    <p class="subtitle">Convert Self-Service schedule into FAS table format</p>
+
+    <div class="card">
+        <div class="collapsible-header collapsed" onclick="toggleInstructions()">
+            <strong>How to Use This Tool</strong>
+        </div>
+        <div id="instructions" class="collapsible-content hidden">
+            <div class="instruction-box">
+                <ul>
+                    <li>Paste your schedule from Self-Service into the text area</li>
+                    <li>Click Generate to parse the data into a table</li>
+                    <li>Edit any cells directly in the table if needed</li>
+                    <li>Copy the TSV output or download as a file</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="form-group">
+            <label for="schedule-input">Paste Schedule from Self-Service:</label>
+            <textarea id="schedule-input" placeholder="ENGL-1181-S1601
+First Year Writing II
+M/W 12:00 PM - 1:55 PM
+1/13/2026 - 5/8/2026
+SOU-A, 123
+
+ENGL-1181-O1234
+First Year Writing II
+1/13/2026 - 5/8/2026
+ONLINE"></textarea>
+        </div>
+
+        <button class="btn btn-full" onclick="generateTable()">Generate FAS Table</button>
+    </div>
+
+    <div id="result-section" class="result-section">
+        <div class="card">
+            <div class="success-msg" id="success-msg">Generated 0 rows</div>
+
+            <div class="table-container">
+                <table id="data-table">
+                    <thead>
+                        <tr>
+                            <th>Course Code/Section</th>
+                            <th>Cr Hrs</th>
+                            <th>Cont Hrs</th>
+                            <th>Eq Hrs</th>
+                            <th>Begin Date</th>
+                            <th>End Date</th>
+                            <th>Mon</th>
+                            <th>Tue</th>
+                            <th>Wed</th>
+                            <th>Thu</th>
+                            <th>Fri</th>
+                            <th>Room</th>
+                            <th>Online</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                    </tbody>
+                </table>
+            </div>
+            <button class="btn btn-secondary add-row-btn" onclick="addEmptyRow()">+ Add Row</button>
+
+            <div class="tsv-section">
+                <h3>Tab-Separated Values (for spreadsheet)</h3>
+                <div class="tsv-output" id="tsv-output"></div>
+                <div class="button-row">
+                    <button class="btn" onclick="copyTSV()">Copy to Clipboard</button>
+                    <button class="btn btn-secondary" onclick="downloadTSV()">Download TSV</button>
+                    <span class="copy-feedback" id="copy-feedback">Copied!</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// === THEME MANAGEMENT ===
+function initTheme() {
+    const saved = localStorage.getItem('assignment-sheet-theme');
+    if (saved) {
+        setTheme(saved);
+    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        setTheme('dark');
+    } else {
+        setTheme('light');
+    }
+}
+
+function setTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    document.getElementById('theme-light').classList.toggle('active', theme === 'light');
+    document.getElementById('theme-dark').classList.toggle('active', theme === 'dark');
+    localStorage.setItem('assignment-sheet-theme', theme);
+}
+
+function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme');
+    setTheme(current === 'dark' ? 'light' : 'dark');
+}
+
+initTheme();
+
+// === UI FUNCTIONS ===
+function toggleInstructions() {
+    const header = document.querySelector('.collapsible-header');
+    const content = document.getElementById('instructions');
+    header.classList.toggle('collapsed');
+    content.classList.toggle('hidden');
+}
+
+// === CONSTANTS ===
+const HOUR_MAP = {
+    "1170": [1, 1, 2],
+    "1181": [4, 4, 5],
+    "1190": [4, 4, 5],
+    "1210": [3, 3, 4],
+    "1220": [3, 3, 4],
+    "1211": [3, 3, 4],
+    "1221": [3, 3, 4]
+};
+
+let tableData = [];
+
+// === PARSING FUNCTIONS ===
+function generateTable() {
+    const messyText = document.getElementById('schedule-input').value;
+
+    if (!messyText.trim()) {
+        alert('Please paste your schedule.');
+        return;
+    }
+
+    const coursePattern = /([A-Z]{3,4}-\d{4}-[A-Z0-9]+)/g;
+    const matches = [...messyText.matchAll(coursePattern)];
+
+    if (matches.length === 0) {
+        alert('No course data found. Make sure your schedule contains course codes like ENGL-1181-S1601.');
+        return;
+    }
+
+    // Find start positions
+    const starts = matches.map(m => m.index);
+    starts.push(messyText.length);
+
+    // Extract blocks
+    const blocks = [];
+    for (let i = 0; i < starts.length - 1; i++) {
+        blocks.push(messyText.substring(starts[i], starts[i + 1]));
+    }
+
+    tableData = [];
+
+    for (const block of blocks) {
+        const nameMatch = block.match(/([A-Z]{3,4}-\d{4}-[A-Z0-9]+)/);
+        if (!nameMatch) continue;
+
+        const fCode = nameMatch[1];
+        const parts = fCode.split('-');
+        const cNum = parts[1];
+        const sCode = parts[2];
+
+        const hours = HOUR_MAP[cNum] || [3, 3, 3];
+        const [cr, cont, eq] = hours;
+
+        // Extract dates
+        const dateFinds = [...block.matchAll(/(\d{1,2}\/\d{1,2}\/\d{4})/g)].map(m => m[1]);
+        const bDate = dateFinds[0] || "";
+        const eDate = dateFinds[dateFinds.length - 1] || "";
+
+        // Extract time
+        const tMatch = block.match(/(\d{1,2}:\d{2}(?:\s*[AP]M)?\s*-\s*\d{1,2}:\d{2}\s*[AP]M)/i);
+        const timeS = tMatch ? tMatch[1].toUpperCase() : "";
+
+        // Extract days
+        const daysF = new Set();
+        if (tMatch) {
+            const upBlock = block.toUpperCase();
+            if (upBlock.includes("M/W") || upBlock.includes("MW")) {
+                daysF.add("Mon");
+                daysF.add("Wed");
+            }
+            if (upBlock.includes("T/TH") || upBlock.includes("TTH") || upBlock.includes("T/R")) {
+                daysF.add("Tue");
+                daysF.add("Thu");
+            }
+            if (/\bM\b/.test(upBlock)) daysF.add("Mon");
+            if (/\bT\b/.test(upBlock)) daysF.add("Tue");
+            if (/\bW\b/.test(upBlock)) daysF.add("Wed");
+            if (/\bR\b/.test(upBlock) || upBlock.includes("TH")) daysF.add("Thu");
+            if (/\bF\b/.test(upBlock)) daysF.add("Fri");
+        }
+
+        // Extract room
+        let physical = "";
+        const roomSearch = block.match(/SOU-([A-Z]),\s*(\d+)/);
+        if (roomSearch) {
+            physical = `S${roomSearch[1]}-${roomSearch[2]}`;
+        }
+        const roomD = physical || (block.toUpperCase().includes("REMOTE") ? "Remote" : "");
+
+        // Check if online
+        const isOnline = block.toUpperCase().includes("ONLINE") && !timeS;
+
+        tableData.push({
+            courseCode: fCode.replace(/-/g, " "),
+            crHrs: cr,
+            contHrs: cont,
+            eqHrs: eq,
+            beginDate: bDate,
+            endDate: eDate,
+            mon: daysF.has("Mon") ? timeS : "",
+            tue: daysF.has("Tue") ? timeS : "",
+            wed: daysF.has("Wed") ? timeS : "",
+            thu: daysF.has("Thu") ? timeS : "",
+            fri: daysF.has("Fri") ? timeS : "",
+            room: roomD,
+            online: isOnline ? "Yes" : ""
+        });
+    }
+
+    renderTable();
+    document.getElementById('success-msg').textContent = `Generated ${tableData.length} rows`;
+    document.getElementById('result-section').classList.add('show');
+    document.getElementById('result-section').scrollIntoView({ behavior: 'smooth' });
+}
+
+function renderTable() {
+    const tbody = document.getElementById('table-body');
+    tbody.innerHTML = '';
+
+    tableData.forEach((row, index) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><input type="text" value="${escapeHtml(row.courseCode)}" onchange="updateRow(${index}, 'courseCode', this.value)"></td>
+            <td><input type="text" class="narrow" value="${row.crHrs}" onchange="updateRow(${index}, 'crHrs', this.value)"></td>
+            <td><input type="text" class="narrow" value="${row.contHrs}" onchange="updateRow(${index}, 'contHrs', this.value)"></td>
+            <td><input type="text" class="narrow" value="${row.eqHrs}" onchange="updateRow(${index}, 'eqHrs', this.value)"></td>
+            <td><input type="text" value="${escapeHtml(row.beginDate)}" onchange="updateRow(${index}, 'beginDate', this.value)"></td>
+            <td><input type="text" value="${escapeHtml(row.endDate)}" onchange="updateRow(${index}, 'endDate', this.value)"></td>
+            <td><input type="text" class="time-input" value="${escapeHtml(row.mon)}" onchange="updateRow(${index}, 'mon', this.value)"></td>
+            <td><input type="text" class="time-input" value="${escapeHtml(row.tue)}" onchange="updateRow(${index}, 'tue', this.value)"></td>
+            <td><input type="text" class="time-input" value="${escapeHtml(row.wed)}" onchange="updateRow(${index}, 'wed', this.value)"></td>
+            <td><input type="text" class="time-input" value="${escapeHtml(row.thu)}" onchange="updateRow(${index}, 'thu', this.value)"></td>
+            <td><input type="text" class="time-input" value="${escapeHtml(row.fri)}" onchange="updateRow(${index}, 'fri', this.value)"></td>
+            <td><input type="text" value="${escapeHtml(row.room)}" onchange="updateRow(${index}, 'room', this.value)"></td>
+            <td><input type="text" class="narrow" value="${escapeHtml(row.online)}" onchange="updateRow(${index}, 'online', this.value)"></td>
+            <td><button class="delete-btn" onclick="deleteRow(${index})">X</button></td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    updateTSV();
+}
+
+function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function updateRow(index, field, value) {
+    tableData[index][field] = value;
+    updateTSV();
+}
+
+function deleteRow(index) {
+    tableData.splice(index, 1);
+    renderTable();
+    document.getElementById('success-msg').textContent = `${tableData.length} rows`;
+}
+
+function addEmptyRow() {
+    tableData.push({
+        courseCode: "",
+        crHrs: 3,
+        contHrs: 3,
+        eqHrs: 3,
+        beginDate: "",
+        endDate: "",
+        mon: "",
+        tue: "",
+        wed: "",
+        thu: "",
+        fri: "",
+        room: "",
+        online: ""
+    });
+    renderTable();
+    document.getElementById('success-msg').textContent = `${tableData.length} rows`;
+}
+
+function updateTSV() {
+    const lines = tableData.map(row => [
+        row.courseCode,
+        row.crHrs,
+        row.contHrs,
+        row.eqHrs,
+        row.beginDate,
+        row.endDate,
+        row.mon,
+        row.tue,
+        row.wed,
+        row.thu,
+        row.fri,
+        row.room,
+        row.online
+    ].join('\t'));
+
+    document.getElementById('tsv-output').textContent = lines.join('\n');
+}
+
+function copyTSV() {
+    const tsv = document.getElementById('tsv-output').textContent;
+    navigator.clipboard.writeText(tsv).then(() => {
+        const feedback = document.getElementById('copy-feedback');
+        feedback.classList.add('show');
+        setTimeout(() => feedback.classList.remove('show'), 2000);
+    });
+}
+
+function downloadTSV() {
+    const tsv = document.getElementById('tsv-output').textContent;
+    const blob = new Blob([tsv], { type: 'text/tab-separated-values' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'faculty_assignment_sheet.tsv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+</script>
+
+</body>
+</html>
