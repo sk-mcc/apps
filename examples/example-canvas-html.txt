@@ -1,0 +1,32 @@
+<h2>Example Reading Title&nbsp;</h2>
+<p>Here's some paragraph text.&nbsp;</p>
+<h3>Here's a sub-heading, with some additional text.&nbsp;</h3>
+<h4>Here's another lower subheading.&nbsp;</h4>
+<p>And here's more paragraph text.&nbsp;</p>
+<p>Here's what a table looks like:</p>
+<table style="border-collapse: collapse; width: 100%;" border="1">
+    <tbody>
+        <tr>
+            <td style="width: 49.9602%;">Top of table</td>
+            <td style="width: 49.9602%;">Another item at the top</td>
+        </tr>
+        <tr>
+            <td style="width: 49.9602%;">stuff under</td>
+            <td style="width: 49.9602%;">stuff under</td>
+        </tr>
+        <tr>
+            <td style="width: 49.9602%;">more stuff</td>
+            <td style="width: 49.9602%;">more stuff</td>
+        </tr>
+    </tbody>
+</table>
+<p>Here's what an image looks like:</p>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="/courses/74810/files/24165361/preview" alt="Screenshot_2026-02-03_22-17-31.png" width="578" height="582" /></p>
+<p>Here's more text.</p>
+<p style="padding-left: 40px;">Here's indented text</p>
+<p>Here's a list below:</p>
+<ul>
+    <li>a list</li>
+    <li>another item</li>
+</ul>
+<p>&nbsp;</p>
