@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Selection Sheet Tool</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <div class="container" id="main-content">
+    <header>
+      <h1>Selection Sheet Tool</h1>
+      <p class="subtitle">Upload schedule files to generate faculty selection sheets</p>
+      <nav class="nav-links">
+        <a href="sort.html" class="nav-link">Campus Sorter</a>
+      </nav>
+    </header>
+
+    <main>
+      <!-- Upload Area -->
+      <div class="upload-area" id="upload-area" role="button" tabindex="0" aria-label="Upload schedule files">
+        <span class="upload-icon" aria-hidden="true">📂</span>
+        <p class="upload-text">Drop schedule files here</p>
+        <p class="upload-hint">or click to browse — supports multiple files</p>
+        <input type="file" id="file-input" class="upload-input" accept=".xlsx,.xls" multiple aria-label="Choose files to upload">
+      </div>
+
+      <!-- Loading State -->
+      <div class="loading" id="loading" aria-live="polite">
+        <div class="loading-spinner" aria-hidden="true"></div>
+        <p class="loading-text">Processing files...</p>
+      </div>
+
+      <!-- Error Display -->
+      <div class="error-message" id="error-message" role="alert"></div>
+
+      <!-- Results -->
+      <div class="results" id="results" aria-live="polite">
+        <div class="file-list" id="file-list" role="list" aria-label="Processed files">
+          <!-- File items will be inserted here -->
+        </div>
+
+        <button class="btn btn-primary" id="download-all-btn" type="button">
+          Download All Spreadsheets
+        </button>
+
+        <div class="flagged-section">
+          <p class="flagged-note">Any issues found are already marked in your spreadsheets.</p>
+          <button class="flagged-toggle" id="flagged-toggle" type="button" aria-expanded="false" aria-controls="flagged-details">
+            Preview flagged items
+          </button>
+
+          <div class="flagged-details" id="flagged-details" role="region" aria-label="Flagged items list">
+            <p class="flagged-details-header">These items are flagged in the Flags/Issues column of your downloaded spreadsheets:</p>
+            <ul class="flagged-list" id="flagged-list">
+              <!-- Flagged items will be inserted here -->
+            </ul>
+          </div>
+        </div>
+
+        <div class="add-more">
+          <button class="add-more-btn" id="add-more-btn" type="button">
+            + Add more files
+          </button>
+        </div>
+
+        <div class="reset-section">
+          <button class="reset-btn" id="reset-btn" type="button">
+            Clear all and start over
+          </button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- JavaScript files - order matters for dependencies -->
+  <script src="js/config.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/processing.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/excel.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>

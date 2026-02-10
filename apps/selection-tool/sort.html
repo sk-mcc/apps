@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campus Sorter - Selection Sheet Tool</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <div class="container" id="main-content">
+    <header>
+      <h1>Campus Sorter</h1>
+      <p class="subtitle">Split multi-campus schedules into separate files</p>
+      <nav class="nav-links">
+        <a href="index.html" class="nav-link">Selection Sheet Tool</a>
+      </nav>
+    </header>
+
+    <main>
+      <!-- Upload Area -->
+      <div class="upload-area" id="upload-area" role="button" tabindex="0" aria-label="Upload schedule file">
+        <span class="upload-icon" aria-hidden="true">📂</span>
+        <p class="upload-text">Drop schedule file here</p>
+        <p class="upload-hint">or click to browse — .xlsx or .xls</p>
+        <input type="file" id="file-input" class="upload-input" accept=".xlsx,.xls" aria-label="Choose file to upload">
+      </div>
+
+      <!-- Loading State -->
+      <div class="loading" id="loading" aria-live="polite">
+        <div class="loading-spinner" aria-hidden="true"></div>
+        <p class="loading-text">Processing file...</p>
+      </div>
+
+      <!-- Error Display -->
+      <div class="error-message" id="error-message" role="alert"></div>
+
+      <!-- Results -->
+      <div class="results" id="results" aria-live="polite">
+        <div class="file-info" id="file-info">
+          <!-- File info will be inserted here -->
+        </div>
+
+        <div class="campus-summary" id="campus-summary">
+          <!-- Campus counts will be inserted here -->
+        </div>
+
+        <div class="download-buttons">
+          <button class="btn btn-primary" id="download-all-btn" type="button">
+            Download All 4 Files
+          </button>
+          <button class="btn btn-outline" id="download-combined-btn" type="button">
+            Single Spreadsheet Export
+          </button>
+          <div class="download-individual">
+            <button class="btn btn-secondary" id="download-center-btn" type="button">
+              Center Campus
+            </button>
+            <button class="btn btn-secondary" id="download-south-btn" type="button">
+              South Campus
+            </button>
+            <button class="btn btn-secondary" id="download-online-btn" type="button">
+              Online
+            </button>
+          </div>
+        </div>
+
+        <div class="reset-section">
+          <button class="reset-btn" id="reset-btn" type="button">
+            Clear and start over
+          </button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- JavaScript files -->
+  <script src="js/config.js"></script>
+  <script src="js/sort-processing.js"></script>
+  <script src="js/sort-excel.js"></script>
+  <script src="js/sort-main.js"></script>
+</body>
+</html>

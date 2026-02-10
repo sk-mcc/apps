@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Join Session - QuickPoll</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <main class="page-centered">
+    <div class="student-container text-center">
+      <h1 class="text-3xl mb-sm">Join Session</h1>
+      <p class="text-muted mb-xl">Enter the session code shown on the screen</p>
+
+      <form id="joinForm">
+        <div class="form-group">
+          <input
+            type="text"
+            id="sessionCode"
+            class="form-input form-input--large"
+            placeholder="XXXX"
+            maxlength="4"
+            autocomplete="off"
+            autocapitalize="characters"
+            spellcheck="false"
+            required
+          >
+        </div>
+
+        <div id="joinError" class="message message--error hidden"></div>
+
+        <button type="submit" id="joinBtn" class="btn btn--primary btn--xlarge btn--block">
+          Join
+        </button>
+      </form>
+
+      <a href="index.html" class="btn btn--ghost mt-xl">Back to Home</a>
+    </div>
+  </main>
+
+  <script type="module">
+    import { db, ref, get } from './js/firebase-config.js';
+    import { normalizeSessionCode, validateSessionCodeFormat, getUrlParam } from './js/utils.js';
+
+    const form = document.getElementById('joinForm');
+    const codeInput = document.getElementById('sessionCode');
+    const errorDiv = document.getElementById('joinError');
+    const joinBtn = document.getElementById('joinBtn');
+
+    // Check for code in URL params (from QR code)
+    const urlCode = getUrlParam('code');
+    if (urlCode) {
+      codeInput.value = normalizeSessionCode(urlCode);
+      // Auto-submit after a brief delay
+      setTimeout(() => form.dispatchEvent(new Event('submit')), 100);
+    }
+
+    // Auto-uppercase input
+    codeInput.addEventListener('input', (e) => {
+      e.target.value = e.target.value.toUpperCase();
+    });
+
+    function showError(message) {
+      errorDiv.textContent = message;
+      errorDiv.classList.remove('hidden');
+    }
+
+    function hideError() {
+      errorDiv.classList.add('hidden');
+    }
+
+    function setLoading(loading) {
+      joinBtn.disabled = loading;
+      joinBtn.textContent = loading ? 'Joining...' : 'Join';
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      hideError();
+
+      const code = normalizeSessionCode(codeInput.value);
+
+      // Validate format
+      if (!validateSessionCodeFormat(code)) {
+        showError('Please enter a valid 4-character session code.');
+        return;
+      }
+
+      setLoading(true);
+
+      try {
+        // Check if session exists and is active
+        const sessionRef = ref(db, `sessions/${code}`);
+        const snapshot = await get(sessionRef);
+
+        if (!snapshot.exists()) {
+          showError('Session not found. Check the code and try again.');
+          setLoading(false);
+          return;
+        }
+
+        const session = snapshot.val();
+
+        if (session.status === 'ended') {
+          showError('This session has ended.');
+          setLoading(false);
+          return;
+        }
+
+        // Redirect to student page
+        window.location.href = `student.html?session=${code}`;
+
+      } catch (error) {
+        console.error('Error joining session:', error);
+        showError('Unable to join session. Please try again.');
+        setLoading(false);
+      }
+    });
+  </script>
+</body>
+</html>
