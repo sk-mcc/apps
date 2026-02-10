@@ -24,7 +24,37 @@
       --warning: #6b5000;
       --warning-bg: #fef8e8;
       --error: #a32d2d;
+      --error-bg: #f8ebe8;
       --focus: #3a7ca5;
+      --upload-bg: #f8fbfd;
+      --upload-bg-hover: #ffffff;
+      --btn-disabled: #9ca3af;
+      --title-gradient: linear-gradient(135deg, #2d5a7b 0%, #3a8a7a 100%);
+    }
+
+    /* Dark Mode */
+    [data-theme="dark"] {
+      --bg: #0f1419;
+      --bg-card: #1a2027;
+      --bg-hover: #242d36;
+      --border: #3d4f5f;
+      --border-light: #3d4f5f;
+      --text: #f0f4f8;
+      --text-muted: #b8c5d3;
+      --accent: #6bb3e0;
+      --accent-hover: #8fc9f0;
+      --accent-light: #1a3044;
+      --success: #6ee7a0;
+      --success-bg: #14332a;
+      --warning: #fcd34d;
+      --warning-bg: #3d3010;
+      --error: #fca5a5;
+      --error-bg: #3d1f1f;
+      --focus: #6bb3e0;
+      --upload-bg: #141a20;
+      --upload-bg-hover: #1a2530;
+      --btn-disabled: #4a5568;
+      --title-gradient: linear-gradient(135deg, #6bb3e0 0%, #5ecead 100%);
     }
 
     * {
@@ -40,6 +70,39 @@
       line-height: 1.6;
       font-size: 18px;
       min-height: 100vh;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    /* Theme Toggle */
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.5rem;
+    }
+
+    .theme-toggle {
+      background: var(--bg-card);
+      border: 1px solid var(--border-light);
+      border-radius: 2rem;
+      padding: 0.25rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      transition: background-color 0.3s, border-color 0.3s;
+    }
+
+    .theme-toggle span {
+      padding: 0.35rem 0.6rem;
+      border-radius: 1.5rem;
+      font-size: 0.85rem;
+      transition: background-color 0.2s;
+    }
+
+    .theme-toggle span.active {
+      background: var(--accent);
+      color: white;
     }
 
     /* Focus styles for accessibility */
@@ -62,7 +125,7 @@
     h1 {
       font-size: 2.75rem;
       font-weight: 700;
-      background: linear-gradient(135deg, #2d5a7b 0%, #3a8a7a 100%);
+      background: var(--title-gradient);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
@@ -87,7 +150,7 @@
 
     /* Upload Area */
     .upload-area {
-      background: linear-gradient(180deg, #f8fbfd 0%, #ffffff 100%);
+      background: var(--upload-bg);
       border: 3px dashed var(--border-light);
       border-radius: 16px;
       padding: 3rem 2rem;
@@ -99,14 +162,14 @@
     .upload-area:hover,
     .upload-area:focus-within {
       border-color: var(--accent);
-      background: linear-gradient(180deg, var(--accent-light) 0%, #ffffff 100%);
+      background: var(--upload-bg-hover);
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(58, 124, 165, 0.15);
     }
 
     .upload-area.drag-over {
       border-color: var(--accent);
-      background: linear-gradient(180deg, var(--accent-light) 0%, #ffffff 100%);
+      background: var(--upload-bg-hover);
       transform: translateY(-2px);
       box-shadow: 0 4px 12px rgba(58, 124, 165, 0.15);
     }
@@ -216,7 +279,7 @@
     }
 
     .btn-primary:disabled {
-      background: #9ca3af;
+      background: var(--btn-disabled);
       cursor: not-allowed;
       box-shadow: none;
       transform: none;
@@ -339,7 +402,7 @@
 
     /* Error Display */
     .error-message {
-      background: #f8ebe8;
+      background: var(--error-bg);
       border: 2px solid var(--error);
       border-radius: 8px;
       padding: 1rem;
@@ -387,16 +450,19 @@
     /* Skip link for accessibility */
     .skip-link {
       position: absolute;
-      top: -40px;
-      left: 0;
+      top: -100%;
+      left: 1rem;
       background: var(--accent);
       color: #ffffff;
-      padding: 8px;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
       z-index: 100;
+      text-decoration: none;
+      font-weight: 600;
     }
 
     .skip-link:focus {
-      top: 0;
+      top: 1rem;
     }
 
     /* Responsive */
@@ -430,7 +496,13 @@
   
   <div class="container" id="main-content">
     <header>
-      <h1>Selection Sheet Tool</h1>
+      <div class="header-row">
+        <h1>Selection Sheet Tool</h1>
+        <div class="theme-toggle" onclick="toggleTheme()">
+          <span id="theme-light">Light</span>
+          <span id="theme-dark">Dark</span>
+        </div>
+      </div>
       <p class="subtitle">Upload schedule files to generate faculty selection sheets</p>
     </header>
 
@@ -492,6 +564,33 @@
   </div>
 
   <script>
+    // ===== THEME MANAGEMENT =====
+    function initTheme() {
+      const saved = localStorage.getItem('selection-tool-theme');
+      if (saved) {
+        setTheme(saved);
+      } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        setTheme('dark');
+      } else {
+        setTheme('light');
+      }
+    }
+
+    function setTheme(theme) {
+      document.documentElement.setAttribute('data-theme', theme);
+      document.getElementById('theme-light').classList.toggle('active', theme === 'light');
+      document.getElementById('theme-dark').classList.toggle('active', theme === 'dark');
+      localStorage.setItem('selection-tool-theme', theme);
+    }
+
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme');
+      setTheme(current === 'dark' ? 'light' : 'dark');
+    }
+
+    // Initialize theme on load
+    initTheme();
+
     // ===== STATE =====
     const processedFiles = []; // Array of { filename, semesterCode, campusName, processedSections, detectedBundles, detectedFlags, rawOriginalData, originalData }
 
