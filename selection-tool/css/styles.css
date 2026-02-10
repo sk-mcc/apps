@@ -519,6 +519,46 @@ main {
   cursor: not-allowed;
 }
 
+/* Tool List (Index Page) */
+.tool-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.tool-card {
+  display: block;
+  padding: 1.5rem;
+  background: var(--bg);
+  border: 2px solid var(--border-light);
+  border-radius: 12px;
+  text-decoration: none;
+  color: var(--text);
+  transition: all 0.2s ease;
+}
+
+.tool-card:hover,
+.tool-card:focus {
+  border-color: var(--accent);
+  background: var(--accent-light);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(58, 124, 165, 0.15);
+}
+
+.tool-name {
+  display: block;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--accent);
+  margin-bottom: 0.25rem;
+}
+
+.tool-desc {
+  display: block;
+  font-size: 1rem;
+  color: var(--text-muted);
+}
+
 /* Responsive */
 @media (max-width: 600px) {
   .container {
