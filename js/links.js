@@ -150,13 +150,6 @@ const TOOLS = [
   // ─────────────────────────────────────────────────────────────────────────
 
   {
-    name: "QuickPoll",
-    url: "QuickPoll/index.html",
-    icon: "bar-chart-2",
-    description: "Real-time classroom polling for quizzes and interactive sessions."
-  },
-
-  {
     name: "Faculty Selection Schedule Tool",
     url: "selection-tool/index.html",
     icon: "files",
@@ -182,6 +175,13 @@ const TOOLS = [
     url: "faculty-tools/door-sign.html",
     icon: "tag",
     description: "Create printable door signs for offices and classrooms."
+  },
+
+  {
+    name: "QuickPoll",
+    url: "QuickPoll/index.html",
+    icon: "bar-chart-2",
+    description: "Real-time classroom polling for quizzes and interactive sessions. Requires login."
   },
 
 
