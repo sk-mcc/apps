@@ -1,8 +1,9 @@
 // Main entry point for Campus Sorter
 
 // ===== STATE =====
-let sortedData = null;
-let originalFilename = '';
+// Using var so these are accessible from ES module scripts via window.*
+var sortedData = null;
+var originalFilename = '';
 
 // ===== DOM ELEMENTS =====
 const uploadArea = document.getElementById('upload-area');
@@ -181,4 +182,9 @@ function renderResults() {
   downloadCenterBtn.textContent = `Center Campus (${sortedData.counts.center})`;
   downloadSouthBtn.textContent = `South Campus (${sortedData.counts.south})`;
   downloadOnlineBtn.textContent = `Online (${sortedData.counts.online})`;
+
+  // Update push button states (Firebase module)
+  if (typeof window.updatePushButtonState === 'function') {
+    window.updatePushButtonState();
+  }
 }
