@@ -100,6 +100,28 @@ function toMinutesForSort(time) {
   return null;
 }
 
+function sharesDay(days1, days2) {
+  if (!days1 || !days2) return false;
+  const d1 = days1.toUpperCase().trim();
+  const d2 = days2.toUpperCase().trim();
+  if (!d1 || !d2) return false;
+
+  // Check Monday, Wednesday, Friday
+  for (const day of ['M', 'W', 'F']) {
+    if (d1.includes(day) && d2.includes(day)) return true;
+  }
+
+  // Check Thursday (TH or R)
+  const hasThursday = (d) => d.includes('TH') || d.includes('R');
+  if (hasThursday(d1) && hasThursday(d2)) return true;
+
+  // Check Tuesday (T not part of TH)
+  const hasTuesday = (d) => d.replace(/TH/g, '').includes('T');
+  if (hasTuesday(d1) && hasTuesday(d2)) return true;
+
+  return false;
+}
+
 function countMeetingDaysForSort(daysStr) {
   if (!daysStr) return 0;
   const days = daysStr.toUpperCase().trim();
@@ -356,7 +378,8 @@ function detectBundlesForSort(processedSections, targetCampus) {
 
       if (['C', 'S', 'H'].includes(s1181.modeCode)) {
         if (s1170.building && s1181.building && s1170.building === s1181.building &&
-            s1170.room && s1181.room && s1170.room === s1181.room) {
+            s1170.room && s1181.room && s1170.room === s1181.room &&
+            sharesDay(s1170.days, s1181.days)) {
           return true;
         }
       }
@@ -366,8 +389,9 @@ function detectBundlesForSort(processedSections, targetCampus) {
 
       const seq1170 = parseInt(s1170.sequence, 10);
       const seq1181 = parseInt(s1181.sequence, 10);
-      if (s1181.modeCode === s1170.modeCode && s1181.weeks === s1170.weeks) {
-        if (Math.abs(seq1181 - seq1170) <= 2) return true;
+      if (s1181.weeks === s1170.weeks && Math.abs(seq1181 - seq1170) <= 2) {
+        if (s1181.modeCode === s1170.modeCode) return true;
+        if (sharesDay(s1170.days, s1181.days)) return true;
       }
 
       return false;
