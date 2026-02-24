@@ -354,7 +354,7 @@ function detectBundlesForSort(processedSections, targetCampus) {
       if (s1170.weeks !== s1181.weeks) return false;
       if (!datesAlign(s1170, s1181)) return false;
 
-      if (['C', 'S'].includes(s1181.modeCode)) {
+      if (['C', 'S', 'H'].includes(s1181.modeCode)) {
         if (s1170.building && s1181.building && s1170.building === s1181.building &&
             s1170.room && s1181.room && s1170.room === s1181.room) {
           return true;
