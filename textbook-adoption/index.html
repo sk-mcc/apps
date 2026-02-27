@@ -6,6 +6,7 @@
   <title>Textbook Adoption Form</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -746,6 +747,7 @@
 
           <div class="btn-group">
             <button type="button" class="btn btn-primary" id="saveTextbookBtn">Save Textbook</button>
+            <button type="button" class="btn btn-secondary" id="cancelTextbookBtn" style="display: none;">Cancel</button>
           </div>
         </div>
 
@@ -962,6 +964,7 @@
     renderSavedTextbooks();
     clearTextbookForm();
     document.getElementById('textbookCard').style.display = 'none';
+    document.getElementById('cancelTextbookBtn').style.display = 'none';
     document.getElementById('postSaveActions').style.display = 'flex';
     markDirty();
   });
@@ -970,6 +973,13 @@
     document.getElementById('textbookCard').style.display = 'block';
     document.getElementById('textbookCardTitle').textContent = `Textbook ${textbookCounter}`;
     document.getElementById('postSaveActions').style.display = 'none';
+    document.getElementById('cancelTextbookBtn').style.display = 'inline-flex';
+    clearTextbookForm();
+  });
+
+  document.getElementById('cancelTextbookBtn').addEventListener('click', function() {
+    document.getElementById('textbookCard').style.display = 'none';
+    document.getElementById('postSaveActions').style.display = 'flex';
     clearTextbookForm();
   });
 
@@ -1054,14 +1064,61 @@
     return rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
   }
 
-  function downloadCSV(csv, filename) {
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  function downloadXLSX(submission) {
+    const headers = ['Term', 'Course', 'Section', 'FacultyName', 'ISBN', 'BookTitle', 'Edition', 'Author',
+       'Publisher', 'OERStatus', 'MaterialType', 'Rentable', 'TextOnly', 'Notes', 'EnrollmentEstimate',
+       'FacultyEmail', 'SubmittedBy', 'SubmittedByEmail', 'Bookstore', 'Department',
+       'SubmissionGroupID', 'SubmissionDate', 'ProcessingStatus'];
+
+    const data = [];
+    const groupId = `SUB-${Date.now()}`;
+
+    if (submission.textbooks.length === 0) {
+      submission.terms.forEach(term => {
+        data.push({
+          Term: term, Course: submission.course, Section: submission.section,
+          FacultyName: submission.facultyName, ISBN: '', BookTitle: '', Edition: '',
+          Author: '', Publisher: '', OERStatus: submission.oerStatus, MaterialType: '',
+          Rentable: '', TextOnly: '', Notes: '', EnrollmentEstimate: submission.enrollmentEstimate,
+          FacultyEmail: submission.facultyEmail, SubmittedBy: submission.submittedBy,
+          SubmittedByEmail: submission.submittedByEmail, Bookstore: submission.bookstore,
+          Department: submission.department, SubmissionGroupID: groupId,
+          SubmissionDate: submission.submissionDate, ProcessingStatus: 'New'
+        });
+      });
+    } else {
+      submission.terms.forEach(term => {
+        submission.textbooks.forEach(tb => {
+          data.push({
+            Term: term, Course: submission.course, Section: submission.section,
+            FacultyName: submission.facultyName, ISBN: tb.isbn, BookTitle: tb.title,
+            Edition: tb.edition, Author: tb.author, Publisher: tb.publisher,
+            OERStatus: submission.oerStatus, MaterialType: tb.materialType,
+            Rentable: tb.rentable ? 'Yes' : 'No', TextOnly: tb.textOnly ? 'Yes' : 'No',
+            Notes: tb.notes, EnrollmentEstimate: submission.enrollmentEstimate,
+            FacultyEmail: submission.facultyEmail, SubmittedBy: submission.submittedBy,
+            SubmittedByEmail: submission.submittedByEmail, Bookstore: submission.bookstore,
+            Department: submission.department, SubmissionGroupID: groupId,
+            SubmissionDate: submission.submissionDate, ProcessingStatus: 'New'
+          });
+        });
+      });
+    }
+
+    const ws = XLSX.utils.json_to_sheet(data, { header: headers });
+
+    // Auto-size columns
+    const colWidths = headers.map(h => {
+      const maxLen = Math.max(h.length, ...data.map(r => String(r[h] || '').length));
+      return { wch: Math.min(maxLen + 2, 40) };
+    });
+    ws['!cols'] = colWidths;
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Textbook Adoptions');
+
+    const filename = `textbook-adoption-${submission.course.replace(/\s+/g, '-')}-${submission.terms.join('-')}.xlsx`;
+    XLSX.writeFile(wb, filename);
   }
 
   function showSummary(submission) {
@@ -1104,9 +1161,9 @@
     }
 
     const submission = gatherSubmission();
-    const csv = generateCSV(submission);
-    const filename = `textbook-adoption-${submission.course.replace(/\s+/g, '-')}-${submission.terms.join('-')}.csv`;
-    downloadCSV(csv, filename);
+
+    // Generate and download XLSX
+    downloadXLSX(submission);
 
     document.getElementById('adoptionForm').style.display = 'none';
     document.getElementById('oerOnlyActions').style.display = 'none';
