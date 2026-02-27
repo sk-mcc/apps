@@ -341,6 +341,13 @@
       margin-top: 0.4rem;
     }
 
+    .submit-note {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.75rem;
+      font-style: italic;
+    }
+
     .two-col {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -753,8 +760,9 @@
 
         <div class="btn-group" id="postSaveActions" style="display: none;">
           <button type="button" class="btn btn-secondary" id="addAnotherBtn">+ Add Another Textbook</button>
-          <button type="button" class="btn btn-success" id="submitFormBtn">Submit Form &amp; Download a Copy</button>
+          <button type="button" class="btn btn-success" id="submitFormBtn">Submit &amp; Download</button>
         </div>
+        <p class="submit-note" id="submitNote" style="display: none;">Clicking submit will download an Excel file. You will need to email it to complete your submission.</p>
       </div>
     </div>
 
@@ -762,24 +770,43 @@
     <div id="oerOnlyActions" style="display: none;">
       <div class="btn-group">
         <button type="button" class="btn btn-secondary" id="oerAddClassBtn">+ Add Another Class</button>
-        <button type="button" class="btn btn-success" id="oerSubmitBtn">Submit Form &amp; Download a Copy</button>
+        <button type="button" class="btn btn-success" id="oerSubmitBtn">Submit &amp; Download</button>
       </div>
+      <p class="submit-note">Clicking submit will download an Excel file. You will need to email it to complete your submission.</p>
     </div>
 
   </form>
 
   <!-- CONFIRMATION PAGE -->
   <div class="confirmation-page" id="confirmationPage">
-    <div class="form-section">
-      <div class="section-title" style="color: var(--accent-green);">Submission Complete</div>
-      <p style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.9rem;">
-        Your textbook adoption has been submitted. A copy has been downloaded for your records.
+    <div class="form-section" style="border-left: 4px solid var(--accent-green);">
+      <div class="section-title" style="color: var(--accent-green);">Download Complete</div>
+      <p style="margin-bottom: 1.25rem; color: var(--text-secondary); font-size: 0.9rem;">
+        Your textbook adoption form has been downloaded as an Excel file. You should see it in your downloads folder.
       </p>
-      <div id="submissionSummary"></div>
-      <div class="btn-group">
-        <button type="button" class="btn btn-primary" id="submitAnotherClassBtn">Submit Another Class</button>
-        <button type="button" class="btn btn-secondary" id="startOverBtn">Start Over</button>
+    </div>
+
+    <div class="form-section" style="border-left: 4px solid var(--accent-amber); background: var(--warning-bg);">
+      <div class="section-title" style="color: var(--accent-amber);">Important: Email Your Form</div>
+      <p style="margin-bottom: 0.75rem; color: var(--text-primary); font-size: 0.95rem; font-weight: 500;">
+        Your submission is not complete until you email the downloaded file.
+      </p>
+      <p style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.9rem;">
+        Please attach the .xlsx file to an email and send it to:
+      </p>
+      <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.75rem 1rem; margin-bottom: 1rem; display: inline-block;">
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; color: var(--accent-blue); font-weight: 500;">pewitta029@macomb.edu</span>
       </div>
+      <p style="color: var(--text-muted); font-size: 0.82rem;">
+        If you are submitting multiple classes, you may attach all files in a single email.
+      </p>
+    </div>
+
+    <div id="submissionSummary"></div>
+
+    <div class="btn-group" style="margin-top: 1.5rem;">
+      <button type="button" class="btn btn-primary" id="submitAnotherClassBtn">Submit Another Class</button>
+      <button type="button" class="btn btn-secondary" id="startOverBtn">Start Over</button>
     </div>
   </div>
 </div>
@@ -945,6 +972,7 @@
     renderSavedTextbooks();
     if (savedTextbooks.length === 0) {
       document.getElementById('postSaveActions').style.display = 'none';
+      document.getElementById('submitNote').style.display = 'none';
       document.getElementById('textbookCard').style.display = 'block';
       textbookCounter = 1;
       document.getElementById('textbookCardTitle').textContent = 'Textbook 1';
@@ -966,6 +994,7 @@
     document.getElementById('textbookCard').style.display = 'none';
     document.getElementById('cancelTextbookBtn').style.display = 'none';
     document.getElementById('postSaveActions').style.display = 'flex';
+    document.getElementById('submitNote').style.display = 'block';
     markDirty();
   });
 
@@ -973,6 +1002,7 @@
     document.getElementById('textbookCard').style.display = 'block';
     document.getElementById('textbookCardTitle').textContent = `Textbook ${textbookCounter}`;
     document.getElementById('postSaveActions').style.display = 'none';
+    document.getElementById('submitNote').style.display = 'none';
     document.getElementById('cancelTextbookBtn').style.display = 'inline-flex';
     clearTextbookForm();
   });
@@ -980,6 +1010,7 @@
   document.getElementById('cancelTextbookBtn').addEventListener('click', function() {
     document.getElementById('textbookCard').style.display = 'none';
     document.getElementById('postSaveActions').style.display = 'flex';
+    document.getElementById('submitNote').style.display = 'block';
     clearTextbookForm();
   });
 
@@ -1198,6 +1229,7 @@
     document.getElementById('savedTextbooksList').innerHTML = '';
     document.getElementById('textbookCard').style.display = 'block';
     document.getElementById('postSaveActions').style.display = 'none';
+    document.getElementById('submitNote').style.display = 'none';
     document.getElementById('textbookCardTitle').textContent = 'Textbook 1';
     clearTextbookForm();
 
@@ -1293,6 +1325,7 @@
         renderSavedTextbooks();
         document.getElementById('textbookCard').style.display = 'none';
         document.getElementById('postSaveActions').style.display = 'flex';
+        document.getElementById('submitNote').style.display = 'block';
       }
     } catch(e) {}
   }
