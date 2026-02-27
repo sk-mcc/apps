@@ -1021,32 +1021,32 @@
 
   function generateCSV(submission) {
     const rows = [
-      ['SubmissionGroupID', 'FacultyName', 'FacultyEmail', 'SubmittedBy', 'SubmittedByEmail',
-       'Bookstore', 'Department', 'Term', 'Course', 'Section', 'EnrollmentEstimate',
-       'OERStatus', 'Author', 'BookTitle', 'Edition', 'ISBN', 'Publisher',
-       'MaterialType', 'Rentable', 'TextOnly', 'Notes', 'SubmissionDate', 'ProcessingStatus']
+      ['Term', 'Course', 'Section', 'FacultyName', 'ISBN', 'BookTitle', 'Edition', 'Author',
+       'Publisher', 'OERStatus', 'MaterialType', 'Rentable', 'TextOnly', 'Notes', 'EnrollmentEstimate',
+       'FacultyEmail', 'SubmittedBy', 'SubmittedByEmail', 'Bookstore', 'Department',
+       'SubmissionGroupID', 'SubmissionDate', 'ProcessingStatus']
     ];
     const groupId = `SUB-${Date.now()}`;
 
     if (submission.textbooks.length === 0) {
       submission.terms.forEach(term => {
-        rows.push([groupId, submission.facultyName, submission.facultyEmail,
+        rows.push([term, submission.course, submission.section, submission.facultyName,
+          '', '', '', '', '', submission.oerStatus, '', '', '', '',
+          submission.enrollmentEstimate, submission.facultyEmail,
           submission.submittedBy, submission.submittedByEmail,
-          submission.bookstore, submission.department, term,
-          submission.course, submission.section, submission.enrollmentEstimate,
-          submission.oerStatus, '', '', '', '', '', '', '', '', '',
+          submission.bookstore, submission.department, groupId,
           submission.submissionDate, 'New']);
       });
     } else {
       submission.terms.forEach(term => {
         submission.textbooks.forEach(tb => {
-          rows.push([groupId, submission.facultyName, submission.facultyEmail,
-            submission.submittedBy, submission.submittedByEmail,
-            submission.bookstore, submission.department, term,
-            submission.course, submission.section, submission.enrollmentEstimate,
-            submission.oerStatus, tb.author, tb.title, tb.edition, tb.isbn,
-            tb.publisher, tb.materialType, tb.rentable ? 'Yes' : 'No',
+          rows.push([term, submission.course, submission.section, submission.facultyName,
+            tb.isbn, tb.title, tb.edition, tb.author, tb.publisher,
+            submission.oerStatus, tb.materialType, tb.rentable ? 'Yes' : 'No',
             tb.textOnly ? 'Yes' : 'No', tb.notes,
+            submission.enrollmentEstimate, submission.facultyEmail,
+            submission.submittedBy, submission.submittedByEmail,
+            submission.bookstore, submission.department, groupId,
             submission.submissionDate, 'New']);
         });
       });
