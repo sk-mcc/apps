@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>South Campus Selection Tool</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="selection-page">
+  <a href="#main-content" class="skip-link">Skip to main content</a>
+
+  <!-- Top toolbar (always visible) -->
+  <div class="selection-toolbar" id="main-content">
+    <div class="toolbar-left">
+      <a href="index.html" class="toolbar-link">All Tools</a>
+      <span class="toolbar-sep" aria-hidden="true">|</span>
+      <h1 class="toolbar-title">South Campus Selection Tool</h1>
+    </div>
+    <div class="toolbar-right">
+      <span class="save-status save-saved" id="save-status">All changes saved</span>
+      <button class="toolbar-btn" id="export-btn" type="button">Export Excel</button>
+      <button class="toolbar-btn toolbar-btn-danger" id="delete-btn" type="button">Delete</button>
+      <button class="toolbar-btn toolbar-btn-secondary" id="logout-btn" type="button">Sign Out</button>
+    </div>
+  </div>
+
+  <!-- Schedule Picker -->
+  <div class="selection-content" id="schedule-picker" style="display:none;">
+    <div class="picker-container">
+      <h2 class="picker-heading">Select a Schedule</h2>
+      <div id="schedule-list" class="picker-list">
+        <!-- Populated dynamically -->
+      </div>
+
+      <div class="picker-divider">
+        <span>or</span>
+      </div>
+
+      <div class="picker-upload">
+        <h3 class="picker-upload-heading">Upload Schedule Directly</h3>
+        <p class="picker-upload-desc">Upload an Excel schedule file to create a new South Campus selection.</p>
+        <div class="upload-area upload-area-compact" id="upload-area" role="button" tabindex="0" aria-label="Upload schedule file">
+          <span class="upload-icon" aria-hidden="true">📂</span>
+          <p class="upload-text">Drop schedule file here</p>
+          <p class="upload-hint">or click to browse — .xlsx or .xls</p>
+          <input type="file" id="file-input" class="upload-input" accept=".xlsx,.xls" aria-label="Choose file to upload">
+        </div>
+        <div class="error-message" id="upload-error" role="alert"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Schedule View -->
+  <div class="selection-content" id="schedule-view" style="display:none;">
+    <div class="schedule-header">
+      <div class="schedule-header-left">
+        <button class="toolbar-btn toolbar-btn-secondary" id="back-btn" type="button">Back</button>
+        <div>
+          <h2 class="schedule-title" id="schedule-title"></h2>
+          <p class="schedule-info" id="schedule-info"></p>
+        </div>
+      </div>
+      <div class="schedule-header-right">
+        <input type="search" class="search-input" id="search-input" placeholder="Search sections..." aria-label="Search sections">
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading" id="loading" aria-live="polite">
+      <div class="loading-spinner" aria-hidden="true"></div>
+      <p class="loading-text">Loading schedule...</p>
+    </div>
+
+    <!-- Selection Table -->
+    <div class="table-wrapper">
+      <table class="selection-table" id="selection-table">
+        <thead>
+          <tr>
+            <th data-sort-key="course" class="sortable">Course</th>
+            <th data-sort-key="section" class="sortable">Section</th>
+            <th data-sort-key="mode" class="sortable">Mode</th>
+            <th data-sort-key="campus" class="sortable">Campus</th>
+            <th data-sort-key="weeks" class="sortable">Weeks</th>
+            <th data-sort-key="days" class="sortable">Days</th>
+            <th data-sort-key="time" class="sortable">Time</th>
+            <th data-sort-key="building" class="sortable">Bldg</th>
+            <th data-sort-key="room" class="sortable">Room</th>
+            <th data-sort-key="dates" class="sortable">Dates</th>
+            <th data-sort-key="capacity" class="sortable">Cap</th>
+            <th data-sort-key="eqHours" class="sortable">Hrs/Eq</th>
+            <th data-sort-key="bundleId" class="sortable">Bundle</th>
+            <th data-sort-key="notes" class="sortable">Notes</th>
+            <th data-sort-key="faculty" class="sortable col-faculty">Faculty Selection</th>
+            <th data-sort-key="flags" class="sortable">Flags/Issues</th>
+          </tr>
+        </thead>
+        <tbody id="selection-table-body">
+          <!-- Populated dynamically -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Processing libraries (global, for fallback upload) -->
+  <script src="js/config.js"></script>
+  <script src="js/sort-processing.js"></script>
+
+  <!-- Main module -->
+  <script type="module">
+    import { initSelectionTool, backToPicker } from './js/selection-display.js';
+    import { processAndPushUpload } from './js/selection-upload.js';
+
+    // Initialize the selection tool
+    await initSelectionTool();
+
+    // Back button
+    document.getElementById('back-btn').addEventListener('click', () => backToPicker());
+
+    // Fallback upload handling
+    const uploadArea = document.getElementById('upload-area');
+    const fileInput = document.getElementById('file-input');
+    const uploadError = document.getElementById('upload-error');
+
+    uploadArea.addEventListener('click', () => fileInput.click());
+    uploadArea.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        fileInput.click();
+      }
+    });
+
+    uploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.classList.add('drag-over');
+    });
+
+    uploadArea.addEventListener('dragleave', () => {
+      uploadArea.classList.remove('drag-over');
+    });
+
+    uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('drag-over');
+      const files = Array.from(e.dataTransfer.files).filter(f =>
+        f.name.endsWith('.xlsx') || f.name.endsWith('.xls')
+      );
+      if (files.length > 0) handleUpload(files[0]);
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length > 0) handleUpload(e.target.files[0]);
+    });
+
+    async function handleUpload(file) {
+      uploadError.classList.remove('visible');
+      uploadArea.style.opacity = '0.5';
+      uploadArea.style.pointerEvents = 'none';
+
+      try {
+        const scheduleId = await processAndPushUpload(file);
+        window.history.replaceState(null, '', `?id=${scheduleId}`);
+        window.location.reload();
+      } catch (err) {
+        uploadError.textContent = `Upload failed: ${err.message}`;
+        uploadError.classList.add('visible');
+        uploadArea.style.opacity = '1';
+        uploadArea.style.pointerEvents = 'auto';
+      }
+    }
+  </script>
+</body>
+</html>

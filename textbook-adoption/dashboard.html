@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Textbook Adoptions Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-primary: #f4f5f7;
+      --bg-secondary: #ffffff;
+      --bg-tertiary: #f0f1f4;
+      --bg-input: #ffffff;
+      --border-color: #d4d7de;
+      --border-focus: #4a6fa5;
+      --text-primary: #1a1f2e;
+      --text-secondary: #4d5468;
+      --text-muted: #8790a5;
+      --accent-blue: #3b6bb5;
+      --accent-teal: #1a7a72;
+      --accent-rose: #b5445a;
+      --accent-amber: #946b2d;
+      --accent-green: #2d7a4a;
+      --danger: #c0392b;
+      --danger-bg: #fdf0ef;
+      --success: #2d7a4a;
+      --success-bg: #eef7f1;
+      --warning: #946b2d;
+      --warning-bg: #fdf8ef;
+      --warning-border: #d4a84b;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --transition: 0.2s ease;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .page-wrapper {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .page-header h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .page-header .subtitle {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    /* Info banner */
+    .info-banner {
+      background: var(--warning-bg);
+      border: 1px solid var(--warning-border);
+      border-radius: var(--radius-sm);
+      padding: 0.6rem 1rem;
+      font-size: 0.8rem;
+      color: var(--warning);
+      margin-bottom: 1.25rem;
+      line-height: 1.5;
+    }
+
+    /* Stats bar */
+    .stats-bar {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .stat-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 0.75rem 1.25rem;
+      box-shadow: var(--shadow-sm);
+      min-width: 130px;
+    }
+
+    .stat-card .stat-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .stat-card .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .stat-card.completed .stat-value { color: var(--accent-green); }
+    .stat-card.pending .stat-value { color: var(--accent-amber); }
+
+    /* Upload area */
+    .upload-area {
+      background: var(--bg-secondary);
+      border: 2px dashed var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition);
+      margin-bottom: 1.5rem;
+    }
+
+    .upload-area:hover, .upload-area.dragover {
+      border-color: var(--accent-blue);
+      background: rgba(59, 107, 181, 0.03);
+    }
+
+    .upload-area .upload-icon {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+      color: var(--text-muted);
+    }
+
+    .upload-area p {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .upload-area .upload-hint {
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      margin-top: 0.25rem;
+    }
+
+    .upload-area input[type="file"] {
+      display: none;
+    }
+
+    /* Filters */
+    .filter-bar {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .filter-bar select, .filter-bar input {
+      padding: 0.5rem 0.75rem;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.85rem;
+      outline: none;
+    }
+
+    .filter-bar select:focus, .filter-bar input:focus {
+      border-color: var(--border-focus);
+    }
+
+    .filter-bar .filter-label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .filter-group {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.55rem 1rem;
+      border-radius: var(--radius-sm);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      border: 1px solid transparent;
+    }
+
+    .btn-primary {
+      background: var(--accent-blue);
+      color: #ffffff;
+      border-color: var(--accent-blue);
+    }
+
+    .btn-primary:hover { background: #2f5a9a; }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text-secondary);
+      border-color: var(--border-color);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--text-muted);
+      color: var(--text-primary);
+    }
+
+    .btn-danger {
+      background: transparent;
+      color: var(--danger);
+      border-color: var(--danger);
+    }
+
+    .btn-danger:hover {
+      background: var(--danger-bg);
+    }
+
+    .btn-sm {
+      padding: 0.35rem 0.65rem;
+      font-size: 0.78rem;
+    }
+
+    /* Table */
+    .table-wrapper {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 0.65rem 0.75rem;
+      border-bottom: 2px solid var(--border-color);
+      text-align: left;
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    thead th:hover {
+      color: var(--text-primary);
+    }
+
+    thead th .sort-arrow {
+      margin-left: 0.25rem;
+      opacity: 0.4;
+    }
+
+    thead th.sorted .sort-arrow {
+      opacity: 1;
+      color: var(--accent-blue);
+    }
+
+    tbody td {
+      padding: 0.6rem 0.75rem;
+      border-bottom: 1px solid var(--border-color);
+      color: var(--text-primary);
+      vertical-align: top;
+    }
+
+    tbody tr:hover {
+      background: rgba(59, 107, 181, 0.03);
+    }
+
+    tbody tr.completed-row {
+      opacity: 0.5;
+    }
+
+    tbody tr.completed-row td {
+      text-decoration: line-through;
+      text-decoration-color: var(--text-muted);
+    }
+
+    tbody tr.completed-row td:first-child {
+      text-decoration: none;
+    }
+
+    /* Checkbox in table */
+    .row-checkbox {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: var(--accent-green);
+    }
+
+    /* Term badge */
+    .term-badge {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      background: rgba(59, 107, 181, 0.08);
+      border: 1px solid rgba(59, 107, 181, 0.2);
+      border-radius: 3px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--accent-blue);
+    }
+
+    .oer-badge {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      border-radius: 3px;
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+
+    .oer-badge.oer-only {
+      background: var(--success-bg);
+      color: var(--accent-green);
+      border: 1px solid rgba(45, 122, 74, 0.2);
+    }
+
+    .oer-badge.oer-plus {
+      background: var(--warning-bg);
+      color: var(--warning);
+      border: 1px solid rgba(148, 107, 45, 0.2);
+    }
+
+    .oer-badge.no-oer {
+      background: var(--bg-tertiary);
+      color: var(--text-muted);
+      border: 1px solid var(--border-color);
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 3rem 2rem;
+      color: var(--text-muted);
+    }
+
+    .empty-state .empty-icon {
+      font-size: 2.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .empty-state p {
+      font-size: 0.9rem;
+    }
+
+    /* Expand row for details */
+    .detail-row td {
+      padding: 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .detail-content {
+      padding: 0.75rem 1rem 0.75rem 3rem;
+      background: var(--bg-tertiary);
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.5rem 2rem;
+    }
+
+    .detail-content .detail-item {
+      display: flex;
+      gap: 0.35rem;
+    }
+
+    .detail-content .detail-label {
+      font-weight: 600;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .expand-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 0.1rem 0.35rem;
+      border-radius: 3px;
+      transition: var(--transition);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .expand-btn:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+
+    /* Show/hide toggle */
+    .show-completed-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .show-completed-toggle input {
+      accent-color: var(--accent-blue);
+    }
+
+    @media (max-width: 768px) {
+      .page-wrapper { padding: 1.25rem 1rem 3rem; }
+      .page-header h1 { font-size: 1.4rem; }
+      .stats-bar { gap: 0.5rem; }
+      .stat-card { min-width: 100px; padding: 0.5rem 0.75rem; }
+      .stat-card .stat-value { font-size: 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-wrapper">
+  <div class="page-header">
+    <div>
+      <h1>Textbook Adoptions Dashboard</h1>
+      <p class="subtitle">Communications Department</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-secondary" id="exportBtn" disabled>Export Remaining</button>
+      <button class="btn btn-danger btn-sm" id="clearAllBtn" style="display: none;">Clear All Data</button>
+    </div>
+  </div>
+
+  <div class="info-banner">
+    Completed checkmarks are saved on this computer only and are not long-term storage. Use this to track what you've already entered into the system.
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-bar">
+    <div class="stat-card">
+      <div class="stat-value" id="statTotal">0</div>
+      <div class="stat-label">Total</div>
+    </div>
+    <div class="stat-card pending">
+      <div class="stat-value" id="statPending">0</div>
+      <div class="stat-label">Pending</div>
+    </div>
+    <div class="stat-card completed">
+      <div class="stat-value" id="statCompleted">0</div>
+      <div class="stat-label">Completed</div>
+    </div>
+  </div>
+
+  <!-- Upload -->
+  <div class="upload-area" id="uploadArea">
+    <div class="upload-icon">+</div>
+    <p>Drop CSV files here or click to upload</p>
+    <div class="upload-hint">Upload the CSV files generated by the Textbook Adoption Form</div>
+    <input type="file" id="fileInput" accept=".csv" multiple>
+  </div>
+
+  <!-- Filters -->
+  <div class="filter-bar" id="filterBar" style="display: none;">
+    <div class="filter-group">
+      <span class="filter-label">Term:</span>
+      <select id="filterTerm"><option value="">All</option></select>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Dept:</span>
+      <select id="filterDept"><option value="">All</option></select>
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">Instructor:</span>
+      <input type="text" id="filterInstructor" placeholder="Search..." style="width: 140px;">
+    </div>
+    <div class="filter-group">
+      <span class="filter-label">OER:</span>
+      <select id="filterOER"><option value="">All</option></select>
+    </div>
+    <label class="show-completed-toggle">
+      <input type="checkbox" id="showCompleted" checked> Show completed
+    </label>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrapper" id="tableWrapper" style="display: none;">
+    <table>
+      <thead>
+        <tr id="tableHead"></tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+  <!-- Empty state -->
+  <div class="empty-state" id="emptyState">
+    <div class="empty-icon">&#9776;</div>
+    <p>No submissions loaded yet. Upload CSV files from the Textbook Adoption Form to get started.</p>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  // =====================
+  // STATE
+  // =====================
+  let allRows = []; // Array of objects
+  let completedIds = new Set(); // Set of row IDs that are checked off
+  let expandedIds = new Set();
+  let sortCol = 'Term';
+  let sortDir = 'asc';
+
+  // Primary columns (always visible in table)
+  const PRIMARY_COLS = [
+    { key: 'Term', label: 'Term' },
+    { key: 'Course', label: 'Course' },
+    { key: 'Section', label: 'Section' },
+    { key: 'FacultyName', label: 'Instructor' },
+    { key: 'ISBN', label: 'ISBN' },
+    { key: 'BookTitle', label: 'Title' },
+    { key: 'Edition', label: 'Ed.' },
+    { key: 'Author', label: 'Author' },
+    { key: 'Publisher', label: 'Publisher' },
+    { key: 'OERStatus', label: 'OER' },
+    { key: 'MaterialType', label: 'Type' },
+    { key: 'Rentable', label: 'Rent' },
+    { key: 'TextOnly', label: 'Text Only' },
+  ];
+
+  // Detail columns (shown on expand)
+  const DETAIL_COLS = [
+    { key: 'Notes', label: 'Notes' },
+    { key: 'EnrollmentEstimate', label: 'Enrollment' },
+    { key: 'FacultyEmail', label: 'Email' },
+    { key: 'SubmittedBy', label: 'Submitted By' },
+    { key: 'Bookstore', label: 'Bookstore' },
+    { key: 'Department', label: 'Department' },
+    { key: 'SubmissionDate', label: 'Date' },
+  ];
+
+  // =====================
+  // CSV PARSING
+  // =====================
+  function parseCSV(text) {
+    const lines = text.trim().split('\n');
+    if (lines.length < 2) return [];
+
+    const headers = parseCSVLine(lines[0]);
+    const rows = [];
+
+    for (let i = 1; i < lines.length; i++) {
+      const values = parseCSVLine(lines[i]);
+      if (values.length === 0) continue;
+      const row = {};
+      headers.forEach((h, idx) => {
+        row[h.trim()] = (values[idx] || '').trim();
+      });
+      // Generate a unique ID for each row
+      row._id = `${row.Term}-${row.Course}-${row.Section}-${row.ISBN}-${row.FacultyName}-${i}-${Date.now()}`;
+      rows.push(row);
+    }
+    return rows;
+  }
+
+  function parseCSVLine(line) {
+    const result = [];
+    let current = '';
+    let inQuotes = false;
+
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      if (inQuotes) {
+        if (char === '"') {
+          if (i + 1 < line.length && line[i + 1] === '"') {
+            current += '"';
+            i++;
+          } else {
+            inQuotes = false;
+          }
+        } else {
+          current += char;
+        }
+      } else {
+        if (char === '"') {
+          inQuotes = true;
+        } else if (char === ',') {
+          result.push(current);
+          current = '';
+        } else {
+          current += char;
+        }
+      }
+    }
+    result.push(current);
+    return result;
+  }
+
+  // =====================
+  // FILE HANDLING
+  // =====================
+  const uploadArea = document.getElementById('uploadArea');
+  const fileInput = document.getElementById('fileInput');
+
+  uploadArea.addEventListener('click', () => fileInput.click());
+
+  uploadArea.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadArea.classList.add('dragover');
+  });
+
+  uploadArea.addEventListener('dragleave', () => {
+    uploadArea.classList.remove('dragover');
+  });
+
+  uploadArea.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadArea.classList.remove('dragover');
+    handleFiles(e.dataTransfer.files);
+  });
+
+  fileInput.addEventListener('change', (e) => {
+    handleFiles(e.target.files);
+    fileInput.value = '';
+  });
+
+  function handleFiles(files) {
+    Array.from(files).forEach(file => {
+      if (!file.name.endsWith('.csv')) return;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const rows = parseCSV(e.target.result);
+        // Deduplicate by checking if a row with same key fields already exists
+        rows.forEach(row => {
+          const exists = allRows.some(r =>
+            r.Term === row.Term &&
+            r.Course === row.Course &&
+            r.Section === row.Section &&
+            r.ISBN === row.ISBN &&
+            r.FacultyName === row.FacultyName &&
+            r.BookTitle === row.BookTitle
+          );
+          if (!exists) allRows.push(row);
+        });
+        saveData();
+        refreshUI();
+      };
+      reader.readAsText(file);
+    });
+  }
+
+  // =====================
+  // PERSISTENCE
+  // =====================
+  function saveData() {
+    try {
+      localStorage.setItem('dashboardRows', JSON.stringify(allRows));
+      localStorage.setItem('dashboardCompleted', JSON.stringify([...completedIds]));
+    } catch(e) {}
+  }
+
+  function loadData() {
+    try {
+      const rows = localStorage.getItem('dashboardRows');
+      const completed = localStorage.getItem('dashboardCompleted');
+      if (rows) allRows = JSON.parse(rows);
+      if (completed) completedIds = new Set(JSON.parse(completed));
+    } catch(e) {}
+  }
+
+  // =====================
+  // FILTERING & SORTING
+  // =====================
+  function getFilteredRows() {
+    const termFilter = document.getElementById('filterTerm').value;
+    const deptFilter = document.getElementById('filterDept').value;
+    const instrFilter = document.getElementById('filterInstructor').value.toLowerCase();
+    const oerFilter = document.getElementById('filterOER').value;
+    const showComp = document.getElementById('showCompleted').checked;
+
+    return allRows.filter(row => {
+      if (termFilter && row.Term !== termFilter) return false;
+      if (deptFilter && row.Department !== deptFilter) return false;
+      if (instrFilter && !(row.FacultyName || '').toLowerCase().includes(instrFilter)) return false;
+      if (oerFilter && row.OERStatus !== oerFilter) return false;
+      if (!showComp && completedIds.has(row._id)) return false;
+      return true;
+    });
+  }
+
+  function sortRows(rows) {
+    return [...rows].sort((a, b) => {
+      let va = (a[sortCol] || '').toLowerCase();
+      let vb = (b[sortCol] || '').toLowerCase();
+      // Completed items always at bottom
+      const aComp = completedIds.has(a._id);
+      const bComp = completedIds.has(b._id);
+      if (aComp !== bComp) return aComp ? 1 : -1;
+
+      if (va < vb) return sortDir === 'asc' ? -1 : 1;
+      if (va > vb) return sortDir === 'asc' ? 1 : -1;
+      return 0;
+    });
+  }
+
+  // =====================
+  // RENDERING
+  // =====================
+  function refreshUI() {
+    const hasData = allRows.length > 0;
+
+    document.getElementById('emptyState').style.display = hasData ? 'none' : 'block';
+    document.getElementById('tableWrapper').style.display = hasData ? 'block' : 'none';
+    document.getElementById('filterBar').style.display = hasData ? 'flex' : 'none';
+    document.getElementById('exportBtn').disabled = !hasData;
+    document.getElementById('clearAllBtn').style.display = hasData ? 'inline-flex' : 'none';
+
+    if (!hasData) return;
+
+    populateFilters();
+    updateStats();
+    renderTable();
+  }
+
+  function populateFilters() {
+    const terms = [...new Set(allRows.map(r => r.Term).filter(Boolean))].sort();
+    const depts = [...new Set(allRows.map(r => r.Department).filter(Boolean))].sort();
+    const oers = [...new Set(allRows.map(r => r.OERStatus).filter(Boolean))].sort();
+
+    const termSelect = document.getElementById('filterTerm');
+    const deptSelect = document.getElementById('filterDept');
+    const oerSelect = document.getElementById('filterOER');
+
+    const currentTerm = termSelect.value;
+    const currentDept = deptSelect.value;
+    const currentOER = oerSelect.value;
+
+    termSelect.innerHTML = '<option value="">All</option>' + terms.map(t => `<option value="${t}" ${t === currentTerm ? 'selected' : ''}>${t}</option>`).join('');
+    deptSelect.innerHTML = '<option value="">All</option>' + depts.map(d => `<option value="${d}" ${d === currentDept ? 'selected' : ''}>${d}</option>`).join('');
+    oerSelect.innerHTML = '<option value="">All</option>' + oers.map(o => `<option value="${o}" ${o === currentOER ? 'selected' : ''}>${o}</option>`).join('');
+  }
+
+  function updateStats() {
+    const total = allRows.length;
+    const completed = allRows.filter(r => completedIds.has(r._id)).length;
+    document.getElementById('statTotal').textContent = total;
+    document.getElementById('statPending').textContent = total - completed;
+    document.getElementById('statCompleted').textContent = completed;
+  }
+
+  function renderTable() {
+    const filtered = sortRows(getFilteredRows());
+
+    // Header
+    const thead = document.getElementById('tableHead');
+    thead.innerHTML = `<th style="width: 40px;"></th><th style="width: 30px;"></th>` +
+      PRIMARY_COLS.map(col => {
+        const isSorted = sortCol === col.key;
+        const arrow = isSorted ? (sortDir === 'asc' ? '\u25B2' : '\u25BC') : '\u25B2';
+        return `<th class="${isSorted ? 'sorted' : ''}" data-col="${col.key}">${col.label} <span class="sort-arrow">${arrow}</span></th>`;
+      }).join('');
+
+    // Body
+    const tbody = document.getElementById('tableBody');
+    tbody.innerHTML = '';
+
+    filtered.forEach(row => {
+      const isCompleted = completedIds.has(row._id);
+      const isExpanded = expandedIds.has(row._id);
+
+      // Main row
+      const tr = document.createElement('tr');
+      if (isCompleted) tr.classList.add('completed-row');
+
+      let cells = `<td><input type="checkbox" class="row-checkbox" data-id="${row._id}" ${isCompleted ? 'checked' : ''}></td>`;
+      cells += `<td><button class="expand-btn" data-id="${row._id}">${isExpanded ? '\u2212' : '+'}</button></td>`;
+
+      PRIMARY_COLS.forEach(col => {
+        let val = row[col.key] || '';
+        if (col.key === 'Term') {
+          val = val ? `<span class="term-badge">${val}</span>` : '';
+        } else if (col.key === 'OERStatus') {
+          if (val === 'OER Only') val = '<span class="oer-badge oer-only">OER Only</span>';
+          else if (val === 'OER and Textbooks') val = '<span class="oer-badge oer-plus">OER+Text</span>';
+          else if (val === 'No OER') val = '<span class="oer-badge no-oer">No OER</span>';
+        } else if (col.key === 'Rentable' || col.key === 'TextOnly') {
+          val = val === 'Yes' ? '\u2713' : '';
+        }
+        cells += `<td>${val}</td>`;
+      });
+
+      tr.innerHTML = cells;
+      tbody.appendChild(tr);
+
+      // Detail row
+      if (isExpanded) {
+        const detailTr = document.createElement('tr');
+        detailTr.classList.add('detail-row');
+        const detailTd = document.createElement('td');
+        detailTd.colSpan = PRIMARY_COLS.length + 2;
+
+        const detailHtml = DETAIL_COLS
+          .filter(col => row[col.key])
+          .map(col => {
+            let val = row[col.key];
+            if (col.key === 'SubmissionDate') {
+              try { val = new Date(val).toLocaleString(); } catch(e) {}
+            }
+            return `<div class="detail-item"><span class="detail-label">${col.label}:</span> ${val}</div>`;
+          }).join('');
+
+        detailTd.innerHTML = `<div class="detail-content">${detailHtml}</div>`;
+        detailTr.appendChild(detailTd);
+        tbody.appendChild(detailTr);
+      }
+    });
+  }
+
+  // =====================
+  // EVENT DELEGATION
+  // =====================
+  document.getElementById('tableBody').addEventListener('change', function(e) {
+    if (e.target.classList.contains('row-checkbox')) {
+      const id = e.target.dataset.id;
+      if (e.target.checked) {
+        completedIds.add(id);
+      } else {
+        completedIds.delete(id);
+      }
+      saveData();
+      updateStats();
+      renderTable();
+    }
+  });
+
+  document.getElementById('tableBody').addEventListener('click', function(e) {
+    const btn = e.target.closest('.expand-btn');
+    if (btn) {
+      const id = btn.dataset.id;
+      if (expandedIds.has(id)) {
+        expandedIds.delete(id);
+      } else {
+        expandedIds.add(id);
+      }
+      renderTable();
+    }
+  });
+
+  document.getElementById('tableHead').addEventListener('click', function(e) {
+    const th = e.target.closest('th[data-col]');
+    if (!th) return;
+    const col = th.dataset.col;
+    if (sortCol === col) {
+      sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      sortCol = col;
+      sortDir = 'asc';
+    }
+    renderTable();
+  });
+
+  // Filters
+  ['filterTerm', 'filterDept', 'filterOER', 'showCompleted'].forEach(id => {
+    document.getElementById(id).addEventListener('change', renderTable);
+  });
+  document.getElementById('filterInstructor').addEventListener('input', renderTable);
+
+  // Export remaining (uncompleted) as CSV
+  document.getElementById('exportBtn').addEventListener('click', function() {
+    const remaining = allRows.filter(r => !completedIds.has(r._id));
+    if (remaining.length === 0) {
+      alert('No remaining items to export.');
+      return;
+    }
+
+    const allCols = [...PRIMARY_COLS, ...DETAIL_COLS];
+    const headers = allCols.map(c => c.key);
+    const csvRows = [headers.map(h => `"${h}"`).join(',')];
+
+    remaining.forEach(row => {
+      csvRows.push(headers.map(h => `"${(row[h] || '').replace(/"/g, '""')}"`).join(','));
+    });
+
+    const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `remaining-adoptions-${new Date().toISOString().slice(0,10)}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  });
+
+  // Clear all
+  document.getElementById('clearAllBtn').addEventListener('click', function() {
+    if (confirm('Are you sure you want to clear all data? This cannot be undone.')) {
+      allRows = [];
+      completedIds = new Set();
+      expandedIds = new Set();
+      saveData();
+      refreshUI();
+    }
+  });
+
+  // =====================
+  // INIT
+  // =====================
+  loadData();
+  refreshUI();
+})();
+</script>
+</body>
+</html>

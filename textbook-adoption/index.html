@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Textbook Adoption Form</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-primary: #f4f5f7;
+      --bg-secondary: #ffffff;
+      --bg-tertiary: #f0f1f4;
+      --bg-input: #ffffff;
+      --border-color: #d4d7de;
+      --border-focus: #4a6fa5;
+      --text-primary: #1a1f2e;
+      --text-secondary: #4d5468;
+      --text-muted: #8790a5;
+      --accent-blue: #3b6bb5;
+      --accent-teal: #1a7a72;
+      --accent-rose: #b5445a;
+      --accent-amber: #946b2d;
+      --accent-green: #2d7a4a;
+      --danger: #c0392b;
+      --danger-bg: #fdf0ef;
+      --success: #2d7a4a;
+      --success-bg: #eef7f1;
+      --warning: #946b2d;
+      --warning-bg: #fdf8ef;
+      --warning-border: #d4a84b;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
+      --transition: 0.2s ease;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .page-wrapper {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+    }
+
+    .form-header {
+      margin-bottom: 2.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .form-header h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.25rem;
+    }
+
+    .form-header .subtitle {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .form-section {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .form-section .section-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+      color: var(--accent-teal);
+      letter-spacing: 0.02em;
+    }
+
+    .field-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .field-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .field-group label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      margin-bottom: 0.4rem;
+      color: var(--text-primary);
+    }
+
+    .field-group label .required {
+      color: var(--accent-rose);
+      margin-left: 2px;
+    }
+
+    .field-group label .optional-tag {
+      color: var(--text-muted);
+      font-weight: 400;
+      font-size: 0.8rem;
+      margin-left: 0.25rem;
+    }
+
+    .field-group .helper-text {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    input[type="text"],
+    input[type="email"],
+    input[type="number"],
+    textarea {
+      width: 100%;
+      padding: 0.65rem 0.85rem;
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.9rem;
+      transition: var(--transition);
+      outline: none;
+    }
+
+    input:focus, textarea:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 2px rgba(59, 107, 181, 0.12);
+    }
+
+    input::placeholder, textarea::placeholder {
+      color: var(--text-muted);
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    .radio-group, .checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .radio-option, .checkbox-option {
+      position: relative;
+    }
+
+    .radio-option input, .checkbox-option input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .radio-option label, .checkbox-option label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.9rem;
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 400;
+      color: var(--text-secondary);
+      transition: var(--transition);
+      user-select: none;
+    }
+
+    .radio-option input:checked + label,
+    .checkbox-option input:checked + label {
+      background: rgba(59, 107, 181, 0.08);
+      border-color: var(--accent-blue);
+      color: var(--text-primary);
+    }
+
+    .radio-option label:hover,
+    .checkbox-option label:hover {
+      border-color: var(--text-muted);
+    }
+
+    .radio-dot {
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--border-color);
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: var(--transition);
+    }
+
+    .radio-dot::after {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: transparent;
+      transition: var(--transition);
+    }
+
+    .radio-option input:checked + label .radio-dot {
+      border-color: var(--accent-blue);
+    }
+
+    .radio-option input:checked + label .radio-dot::after {
+      background: var(--accent-blue);
+    }
+
+    .check-box {
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--border-color);
+      border-radius: 3px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: var(--transition);
+    }
+
+    .check-box::after {
+      content: '';
+      width: 8px;
+      height: 6px;
+      border-left: 2px solid transparent;
+      border-bottom: 2px solid transparent;
+      transform: rotate(-45deg) translate(1px, -1px);
+      transition: var(--transition);
+    }
+
+    .checkbox-option input:checked + label .check-box {
+      border-color: var(--accent-blue);
+      background: var(--accent-blue);
+    }
+
+    .checkbox-option input:checked + label .check-box::after {
+      border-color: #ffffff;
+    }
+
+    .ay-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .ay-label {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .override-link {
+      display: inline-block;
+      font-size: 0.8rem;
+      color: var(--accent-blue);
+      cursor: pointer;
+      border: none;
+      background: none;
+      font-family: 'DM Sans', sans-serif;
+      text-decoration: underline;
+      text-decoration-style: dotted;
+      text-underline-offset: 3px;
+    }
+
+    .override-link:hover {
+      color: var(--accent-teal);
+    }
+
+    .override-field {
+      display: none;
+      margin-bottom: 0.75rem;
+    }
+
+    .override-field.visible {
+      display: block;
+    }
+
+    .override-row {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    .override-field select {
+      padding: 0.5rem 0.75rem;
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.85rem;
+      outline: none;
+    }
+
+    .override-field select:focus {
+      border-color: var(--border-focus);
+    }
+
+    .warning-banner {
+      background: var(--warning-bg);
+      border: 1px solid var(--warning-border);
+      border-radius: var(--radius-sm);
+      padding: 0.65rem 1rem;
+      font-size: 0.83rem;
+      color: var(--warning);
+      margin-bottom: 0.75rem;
+      display: none;
+      line-height: 1.5;
+    }
+
+    .warning-banner.visible {
+      display: block;
+    }
+
+    .term-helper {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 0.4rem;
+    }
+
+    .submit-note {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.75rem;
+      font-style: italic;
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .textbook-section {
+      display: none;
+    }
+
+    .textbook-section.visible {
+      display: block;
+    }
+
+    .textbook-card {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+      position: relative;
+    }
+
+    .textbook-card .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+    }
+
+    .textbook-card .card-header h3 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--accent-amber);
+    }
+
+    .field-spacer {
+      height: 1px;
+      background: var(--border-color);
+      margin: 1rem 0;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.7rem 1.25rem;
+      border-radius: var(--radius-sm);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: var(--transition);
+      border: 1px solid transparent;
+    }
+
+    .btn-primary {
+      background: var(--accent-blue);
+      color: #ffffff;
+      border-color: var(--accent-blue);
+    }
+
+    .btn-primary:hover {
+      background: #2f5a9a;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text-secondary);
+      border-color: var(--border-color);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--text-muted);
+      color: var(--text-primary);
+    }
+
+    .btn-success {
+      background: var(--accent-green);
+      color: #ffffff;
+      border-color: var(--accent-green);
+    }
+
+    .btn-success:hover {
+      background: #246b3e;
+    }
+
+    .btn-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 1.25rem;
+    }
+
+    .saved-textbook {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 0.65rem 1rem;
+      margin-bottom: 0.5rem;
+      font-size: 0.85rem;
+    }
+
+    .saved-textbook .book-info {
+      color: var(--text-primary);
+    }
+
+    .saved-textbook .book-info span {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+
+    .saved-textbook .remove-saved {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.85rem;
+      padding: 0.25rem;
+      transition: var(--transition);
+    }
+
+    .saved-textbook .remove-saved:hover {
+      color: var(--danger);
+    }
+
+    .confirmation-page {
+      display: none;
+    }
+
+    .confirmation-page.visible {
+      display: block;
+    }
+
+    .summary-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      margin: 1rem 0;
+    }
+
+    .summary-table th {
+      text-align: left;
+      padding: 0.5rem 0.75rem;
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+      font-weight: 500;
+      border: 1px solid var(--border-color);
+    }
+
+    .summary-table td {
+      padding: 0.5rem 0.75rem;
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+    }
+
+    .autosave-indicator {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: var(--radius-sm);
+      padding: 0.35rem 0.65rem;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 100;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .autosave-indicator.visible {
+      opacity: 1;
+    }
+
+    @media (max-width: 600px) {
+      .page-wrapper { padding: 1.25rem 1rem 3rem; }
+      .two-col { grid-template-columns: 1fr; }
+      .form-header h1 { font-size: 1.4rem; }
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--accent-blue);
+      outline-offset: 2px;
+    }
+
+    input:focus-visible, textarea:focus-visible {
+      outline: none;
+    }
+  </style>
+</head>
+<body>
+
+<div class="autosave-indicator" id="autosaveIndicator">Draft saved</div>
+
+<div class="page-wrapper">
+  <div class="form-header">
+    <h1>Textbook Adoption Form</h1>
+    <p class="subtitle">Communications Department</p>
+  </div>
+
+  <form id="adoptionForm" novalidate>
+
+    <!-- FACULTY INFO -->
+    <div class="form-section">
+      <div class="section-title">Faculty Information</div>
+      <div class="two-col">
+        <div class="field-group">
+          <label for="facultyName">Full name <span class="required">*</span></label>
+          <input type="text" id="facultyName" placeholder="First Last">
+        </div>
+        <div class="field-group">
+          <label for="facultyEmail">Macomb email address <span class="required">*</span></label>
+          <input type="email" id="facultyEmail" placeholder="name@macomb.edu">
+        </div>
+      </div>
+    </div>
+
+    <!-- COURSE DETAILS -->
+    <div class="form-section">
+      <div class="section-title">Course Details</div>
+
+      <div class="field-group">
+        <label>Bookstore <span class="required">*</span></label>
+        <div class="radio-group">
+          <div class="radio-option">
+            <input type="radio" name="bookstore" id="bkCenter" value="Center Campus">
+            <label for="bkCenter"><span class="radio-dot"></span> Center Campus</label>
+          </div>
+          <div class="radio-option">
+            <input type="radio" name="bookstore" id="bkSouth" value="South Campus">
+            <label for="bkSouth"><span class="radio-dot"></span> South Campus</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label>Department <span class="required">*</span></label>
+        <div class="radio-group">
+          <div class="radio-option">
+            <input type="radio" name="department" id="deptEAPP" value="EAPP">
+            <label for="deptEAPP"><span class="radio-dot"></span> EAPP</label>
+          </div>
+          <div class="radio-option">
+            <input type="radio" name="department" id="deptENGL" value="ENGL">
+            <label for="deptENGL"><span class="radio-dot"></span> ENGL</label>
+          </div>
+          <div class="radio-option">
+            <input type="radio" name="department" id="deptSPCH" value="SPCH">
+            <label for="deptSPCH"><span class="radio-dot"></span> SPCH</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="field-group">
+          <label for="course">Course <span class="required">*</span></label>
+          <input type="text" id="course" placeholder="ENGL 2800">
+          <div class="helper-text">e.g. ENGL 2800</div>
+        </div>
+        <div class="field-group">
+          <label for="section">Section(s) <span class="required">*</span></label>
+          <input type="text" id="section" placeholder="S1602">
+          <div class="helper-text">e.g. S1602</div>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label for="enrollment">Enrollment estimate <span class="required">*</span></label>
+        <input type="number" id="enrollment" placeholder="Use class capacity" min="1">
+      </div>
+
+      <!-- TERM / ACADEMIC YEAR -->
+      <div class="field-group">
+        <label>Term(s) <span class="required">*</span></label>
+
+        <div class="ay-header">
+          <span class="ay-label" id="ayLabel"></span>
+          <button type="button" class="override-link" id="ayOverrideLink">Change year</button>
+        </div>
+
+        <div class="override-field" id="ayOverrideField">
+          <div class="override-row">
+            <select id="aySelect"></select>
+            <button type="button" class="btn btn-secondary" style="padding: 0.45rem 0.85rem; font-size: 0.82rem;" id="ayApplyBtn">Apply</button>
+            <button type="button" class="override-link" id="ayCancelBtn">Cancel</button>
+          </div>
+        </div>
+
+        <div class="warning-banner" id="lateWarning">
+          The textbook adoption window for this academic year has typically passed. Late submissions may not be processed in time. If you need to submit for the next academic year, use "Change year" above.
+        </div>
+
+        <div class="checkbox-group" id="termCheckboxes"></div>
+        <div class="term-helper">Select all semesters you want to use the same textbook(s) for this class.</div>
+      </div>
+    </div>
+
+    <!-- OER STATUS -->
+    <div class="form-section">
+      <div class="section-title">OER Status</div>
+      <div class="field-group">
+        <label>Does this class use OER? <span class="required">*</span></label>
+        <div class="radio-group" style="flex-direction: column;">
+          <div class="radio-option">
+            <input type="radio" name="oer" id="oerOnly" value="OER Only">
+            <label for="oerOnly"><span class="radio-dot"></span> Yes, this class only uses OER</label>
+          </div>
+          <div class="radio-option">
+            <input type="radio" name="oer" id="oerPlus" value="OER and Textbooks">
+            <label for="oerPlus"><span class="radio-dot"></span> Yes, this class uses OER and textbook(s)</label>
+          </div>
+          <div class="radio-option">
+            <input type="radio" name="oer" id="oerNo" value="No OER">
+            <label for="oerNo"><span class="radio-dot"></span> No, this class does not use OER</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TEXTBOOK SECTION (conditional) -->
+    <div class="textbook-section" id="textbookSection">
+      <div class="form-section">
+        <div class="section-title">Textbook Information</div>
+
+        <div id="savedTextbooksList"></div>
+
+        <div class="textbook-card" id="textbookCard">
+          <div class="card-header">
+            <h3 id="textbookCardTitle">Textbook 1</h3>
+          </div>
+
+          <div class="two-col">
+            <div class="field-group">
+              <label for="tbAuthor">Author <span class="required">*</span></label>
+              <input type="text" id="tbAuthor" placeholder="Last, First">
+            </div>
+            <div class="field-group">
+              <label for="tbTitle">Title <span class="required">*</span></label>
+              <input type="text" id="tbTitle" placeholder="Textbook title">
+            </div>
+          </div>
+
+          <div class="two-col">
+            <div class="field-group">
+              <label for="tbEdition">Edition <span class="required">*</span></label>
+              <input type="text" id="tbEdition" placeholder="e.g. 4th">
+            </div>
+            <div class="field-group">
+              <label for="tbISBN">ISBN <span class="required">*</span></label>
+              <input type="text" id="tbISBN" placeholder="978-0-000-00000-0">
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label for="tbPublisher">Publisher <span class="required">*</span></label>
+            <input type="text" id="tbPublisher" placeholder="Publisher name">
+          </div>
+
+          <div class="field-spacer"></div>
+
+          <div class="field-group">
+            <label>Material type <span class="required">*</span></label>
+            <div class="radio-group">
+              <div class="radio-option">
+                <input type="radio" name="materialType" id="matRequired" value="Required" checked>
+                <label for="matRequired"><span class="radio-dot"></span> Required</label>
+              </div>
+              <div class="radio-option">
+                <input type="radio" name="materialType" id="matRecommended" value="Recommended">
+                <label for="matRecommended"><span class="radio-dot"></span> Recommended</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="field-spacer"></div>
+
+          <div class="field-group">
+            <div class="checkbox-group">
+              <div class="checkbox-option">
+                <input type="checkbox" id="tbRentable" value="yes">
+                <label for="tbRentable"><span class="check-box"></span> Rentable: if available, the bookstore will provide a rental option</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <div class="checkbox-group">
+              <div class="checkbox-option">
+                <input type="checkbox" id="tbTextOnly" value="yes">
+                <label for="tbTextOnly"><span class="check-box"></span> Text only: text-only portion of the package is acceptable for student use</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <label for="tbNotes">Notes <span class="optional-tag">(optional)</span></label>
+            <textarea id="tbNotes" placeholder="Any additional information about this textbook..."></textarea>
+          </div>
+
+          <div class="btn-group">
+            <button type="button" class="btn btn-primary" id="saveTextbookBtn">Save Textbook</button>
+            <button type="button" class="btn btn-secondary" id="cancelTextbookBtn" style="display: none;">Cancel</button>
+          </div>
+        </div>
+
+        <div class="btn-group" id="postSaveActions" style="display: none;">
+          <button type="button" class="btn btn-secondary" id="addAnotherBtn">+ Add Another Textbook</button>
+          <button type="button" class="btn btn-success" id="submitFormBtn">Submit &amp; Download</button>
+        </div>
+        <p class="submit-note" id="submitNote" style="display: none;">Clicking submit will download an Excel file. You will need to email it to complete your submission.</p>
+      </div>
+    </div>
+
+    <!-- OER ONLY: skip straight to submit -->
+    <div id="oerOnlyActions" style="display: none;">
+      <div class="btn-group">
+        <button type="button" class="btn btn-secondary" id="oerAddClassBtn">+ Add Another Class</button>
+        <button type="button" class="btn btn-success" id="oerSubmitBtn">Submit &amp; Download</button>
+      </div>
+      <p class="submit-note">Clicking submit will download an Excel file. You will need to email it to complete your submission.</p>
+    </div>
+
+  </form>
+
+  <!-- CONFIRMATION PAGE -->
+  <div class="confirmation-page" id="confirmationPage">
+    <div class="form-section" style="border-left: 4px solid var(--accent-green);">
+      <div class="section-title" style="color: var(--accent-green);">Download Complete</div>
+      <p style="margin-bottom: 1.25rem; color: var(--text-secondary); font-size: 0.9rem;">
+        Your textbook adoption form has been downloaded as an Excel file. You should see it in your downloads folder.
+      </p>
+    </div>
+
+    <div class="form-section" style="border-left: 4px solid var(--accent-amber); background: var(--warning-bg);">
+      <div class="section-title" style="color: var(--accent-amber);">Important: Email Your Form</div>
+      <p style="margin-bottom: 0.75rem; color: var(--text-primary); font-size: 0.95rem; font-weight: 500;">
+        Your submission is not complete until you email the downloaded file.
+      </p>
+      <p style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.9rem;">
+        Please attach the .xlsx file to an email and send it to:
+      </p>
+      <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.75rem 1rem; margin-bottom: 1rem; display: inline-block;">
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; color: var(--accent-blue); font-weight: 500;">pewitta029@macomb.edu</span>
+      </div>
+      <p style="color: var(--text-muted); font-size: 0.82rem;">
+        If you are submitting multiple classes, you may attach all files in a single email.
+      </p>
+    </div>
+
+    <div id="submissionSummary"></div>
+
+    <div class="btn-group" style="margin-top: 1.5rem;">
+      <button type="button" class="btn btn-primary" id="submitAnotherClassBtn">Submit Another Class</button>
+      <button type="button" class="btn btn-secondary" id="startOverBtn">Start Over</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+
+  let savedTextbooks = [];
+  let textbookCounter = 1;
+  let formDirty = false;
+  let autosaveTimer = null;
+  let currentAY = null;
+
+  // =====================
+  // ACADEMIC YEAR LOGIC
+  // Jan-Apr: show current AY, no warning
+  // May-Dec: show current AY with warning
+  // Rolls over in January
+  // =====================
+  function getDefaultAY() {
+    const now = new Date();
+    const month = now.getMonth(); // 0=Jan, 4=May
+    const year = now.getFullYear();
+
+    if (month < 4) {
+      return { startYear: year, endYear: year + 1, late: false };
+    } else {
+      return { startYear: year, endYear: year + 1, late: true };
+    }
+  }
+
+  function getTermsForAY(ay) {
+    const s = String(ay.startYear).slice(-2);
+    const e = String(ay.endYear).slice(-2);
+    return [
+      { label: `SS${s}`, value: `SS${s}` },
+      { label: `F${s}`, value: `F${s}` },
+      { label: `W${e}`, value: `W${e}` }
+    ];
+  }
+
+  function renderAY(ay) {
+    currentAY = ay;
+    document.getElementById('ayLabel').textContent = `Academic Year ${ay.startYear}\u2013${ay.endYear}`;
+    document.getElementById('lateWarning').classList.toggle('visible', !!ay.late);
+
+    const terms = getTermsForAY(ay);
+    const container = document.getElementById('termCheckboxes');
+    container.innerHTML = terms.map((t, i) => `
+      <div class="checkbox-option">
+        <input type="checkbox" name="terms" id="term${i}" value="${t.value}">
+        <label for="term${i}"><span class="check-box"></span> ${t.label}</label>
+      </div>
+    `).join('');
+
+    container.querySelectorAll('input').forEach(el => {
+      el.addEventListener('change', markDirty);
+    });
+  }
+
+  function populateAYSelect() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const select = document.getElementById('aySelect');
+    select.innerHTML = '';
+    for (let y = year - 1; y <= year + 2; y++) {
+      const opt = document.createElement('option');
+      opt.value = y;
+      opt.textContent = `${y}\u2013${y + 1}`;
+      if (currentAY && y === currentAY.startYear) opt.selected = true;
+      select.appendChild(opt);
+    }
+  }
+
+  document.getElementById('ayOverrideLink').addEventListener('click', function() {
+    populateAYSelect();
+    document.getElementById('ayOverrideField').classList.add('visible');
+  });
+
+  document.getElementById('ayCancelBtn').addEventListener('click', function() {
+    document.getElementById('ayOverrideField').classList.remove('visible');
+  });
+
+  document.getElementById('ayApplyBtn').addEventListener('click', function() {
+    const selectedYear = parseInt(document.getElementById('aySelect').value);
+    renderAY({ startYear: selectedYear, endYear: selectedYear + 1, late: false });
+    document.getElementById('ayOverrideField').classList.remove('visible');
+    markDirty();
+  });
+
+  // =====================
+  // OER CONDITIONAL
+  // =====================
+  document.querySelectorAll('input[name="oer"]').forEach(radio => {
+    radio.addEventListener('change', function() {
+      const textbookSection = document.getElementById('textbookSection');
+      const oerOnlyActions = document.getElementById('oerOnlyActions');
+      if (this.value === 'OER Only') {
+        textbookSection.classList.remove('visible');
+        oerOnlyActions.style.display = 'block';
+      } else {
+        textbookSection.classList.add('visible');
+        oerOnlyActions.style.display = 'none';
+      }
+      markDirty();
+    });
+  });
+
+  // =====================
+  // TEXTBOOK MANAGEMENT
+  // =====================
+  function getTextbookData() {
+    return {
+      author: document.getElementById('tbAuthor').value.trim(),
+      title: document.getElementById('tbTitle').value.trim(),
+      edition: document.getElementById('tbEdition').value.trim(),
+      isbn: document.getElementById('tbISBN').value.trim(),
+      publisher: document.getElementById('tbPublisher').value.trim(),
+      materialType: document.querySelector('input[name="materialType"]:checked')?.value || 'Required',
+      rentable: document.getElementById('tbRentable').checked,
+      textOnly: document.getElementById('tbTextOnly').checked,
+      notes: document.getElementById('tbNotes').value.trim()
+    };
+  }
+
+  function validateTextbook(tb) {
+    const missing = [];
+    if (!tb.author) missing.push('Author');
+    if (!tb.title) missing.push('Title');
+    if (!tb.edition) missing.push('Edition');
+    if (!tb.isbn) missing.push('ISBN');
+    if (!tb.publisher) missing.push('Publisher');
+    return missing;
+  }
+
+  function clearTextbookForm() {
+    document.getElementById('tbAuthor').value = '';
+    document.getElementById('tbTitle').value = '';
+    document.getElementById('tbEdition').value = '';
+    document.getElementById('tbISBN').value = '';
+    document.getElementById('tbPublisher').value = '';
+    document.getElementById('tbRentable').checked = false;
+    document.getElementById('tbTextOnly').checked = false;
+    document.getElementById('tbNotes').value = '';
+    document.querySelector('#matRequired').checked = true;
+  }
+
+  function renderSavedTextbooks() {
+    const container = document.getElementById('savedTextbooksList');
+    container.innerHTML = savedTextbooks.map((tb, i) => `
+      <div class="saved-textbook">
+        <div class="book-info">
+          <strong>${tb.title}</strong> <span>by ${tb.author} \u2014 ${tb.materialType}</span>
+        </div>
+        <button type="button" class="remove-saved" onclick="removeTextbook(${i})" title="Remove">\u00d7</button>
+      </div>
+    `).join('');
+  }
+
+  window.removeTextbook = function(index) {
+    savedTextbooks.splice(index, 1);
+    renderSavedTextbooks();
+    if (savedTextbooks.length === 0) {
+      document.getElementById('postSaveActions').style.display = 'none';
+      document.getElementById('submitNote').style.display = 'none';
+      document.getElementById('textbookCard').style.display = 'block';
+      textbookCounter = 1;
+      document.getElementById('textbookCardTitle').textContent = 'Textbook 1';
+    }
+    markDirty();
+  };
+
+  document.getElementById('saveTextbookBtn').addEventListener('click', function() {
+    const tb = getTextbookData();
+    const missing = validateTextbook(tb);
+    if (missing.length > 0) {
+      alert('Please fill in: ' + missing.join(', '));
+      return;
+    }
+    savedTextbooks.push(tb);
+    textbookCounter++;
+    renderSavedTextbooks();
+    clearTextbookForm();
+    document.getElementById('textbookCard').style.display = 'none';
+    document.getElementById('cancelTextbookBtn').style.display = 'none';
+    document.getElementById('postSaveActions').style.display = 'flex';
+    document.getElementById('submitNote').style.display = 'block';
+    markDirty();
+  });
+
+  document.getElementById('addAnotherBtn').addEventListener('click', function() {
+    document.getElementById('textbookCard').style.display = 'block';
+    document.getElementById('textbookCardTitle').textContent = `Textbook ${textbookCounter}`;
+    document.getElementById('postSaveActions').style.display = 'none';
+    document.getElementById('submitNote').style.display = 'none';
+    document.getElementById('cancelTextbookBtn').style.display = 'inline-flex';
+    clearTextbookForm();
+  });
+
+  document.getElementById('cancelTextbookBtn').addEventListener('click', function() {
+    document.getElementById('textbookCard').style.display = 'none';
+    document.getElementById('postSaveActions').style.display = 'flex';
+    document.getElementById('submitNote').style.display = 'block';
+    clearTextbookForm();
+  });
+
+  // =====================
+  // VALIDATION
+  // =====================
+  function getSelectedTerms() {
+    return Array.from(document.querySelectorAll('input[name="terms"]:checked')).map(cb => cb.value);
+  }
+
+  function validateCourseDetails() {
+    const missing = [];
+    if (!document.getElementById('facultyName').value.trim()) missing.push('Full name');
+    if (!document.getElementById('facultyEmail').value.trim()) missing.push('Macomb email address');
+    if (!document.querySelector('input[name="bookstore"]:checked')) missing.push('Bookstore');
+    if (!document.querySelector('input[name="department"]:checked')) missing.push('Department');
+    if (!document.getElementById('course').value.trim()) missing.push('Course');
+    if (!document.getElementById('section').value.trim()) missing.push('Section');
+    if (!document.getElementById('enrollment').value) missing.push('Enrollment estimate');
+    if (getSelectedTerms().length === 0) missing.push('Term (select at least one)');
+    if (!document.querySelector('input[name="oer"]:checked')) missing.push('OER status');
+    return missing;
+  }
+
+  // =====================
+  // SUBMISSION
+  // =====================
+  function gatherSubmission() {
+    const oer = document.querySelector('input[name="oer"]:checked')?.value;
+    const facultyName = document.getElementById('facultyName').value.trim();
+    const facultyEmail = document.getElementById('facultyEmail').value.trim();
+
+    return {
+      submittedBy: facultyName,
+      submittedByEmail: facultyEmail,
+      facultyName: facultyName,
+      facultyEmail: facultyEmail,
+      bookstore: document.querySelector('input[name="bookstore"]:checked')?.value,
+      department: document.querySelector('input[name="department"]:checked')?.value,
+      terms: getSelectedTerms(),
+      course: document.getElementById('course').value.trim(),
+      section: document.getElementById('section').value.trim(),
+      enrollmentEstimate: document.getElementById('enrollment').value,
+      oerStatus: oer,
+      textbooks: oer === 'OER Only' ? [] : savedTextbooks,
+      submissionDate: new Date().toISOString()
+    };
+  }
+
+  function generateCSV(submission) {
+    const rows = [
+      ['Term', 'Course', 'Section', 'FacultyName', 'ISBN', 'BookTitle', 'Edition', 'Author',
+       'Publisher', 'OERStatus', 'MaterialType', 'Rentable', 'TextOnly', 'Notes', 'EnrollmentEstimate',
+       'FacultyEmail', 'SubmittedBy', 'SubmittedByEmail', 'Bookstore', 'Department',
+       'SubmissionGroupID', 'SubmissionDate', 'ProcessingStatus']
+    ];
+    const groupId = `SUB-${Date.now()}`;
+
+    if (submission.textbooks.length === 0) {
+      submission.terms.forEach(term => {
+        rows.push([term, submission.course, submission.section, submission.facultyName,
+          '', '', '', '', '', submission.oerStatus, '', '', '', '',
+          submission.enrollmentEstimate, submission.facultyEmail,
+          submission.submittedBy, submission.submittedByEmail,
+          submission.bookstore, submission.department, groupId,
+          submission.submissionDate, 'New']);
+      });
+    } else {
+      submission.terms.forEach(term => {
+        submission.textbooks.forEach(tb => {
+          rows.push([term, submission.course, submission.section, submission.facultyName,
+            tb.isbn, tb.title, tb.edition, tb.author, tb.publisher,
+            submission.oerStatus, tb.materialType, tb.rentable ? 'Yes' : 'No',
+            tb.textOnly ? 'Yes' : 'No', tb.notes,
+            submission.enrollmentEstimate, submission.facultyEmail,
+            submission.submittedBy, submission.submittedByEmail,
+            submission.bookstore, submission.department, groupId,
+            submission.submissionDate, 'New']);
+        });
+      });
+    }
+    return rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+  }
+
+  function downloadXLSX(submission) {
+    const headers = ['Term', 'Course', 'Section', 'FacultyName', 'ISBN', 'BookTitle', 'Edition', 'Author',
+       'Publisher', 'OERStatus', 'MaterialType', 'Rentable', 'TextOnly', 'Notes', 'EnrollmentEstimate',
+       'FacultyEmail', 'SubmittedBy', 'SubmittedByEmail', 'Bookstore', 'Department',
+       'SubmissionGroupID', 'SubmissionDate', 'ProcessingStatus'];
+
+    const data = [];
+    const groupId = `SUB-${Date.now()}`;
+
+    if (submission.textbooks.length === 0) {
+      submission.terms.forEach(term => {
+        data.push({
+          Term: term, Course: submission.course, Section: submission.section,
+          FacultyName: submission.facultyName, ISBN: '', BookTitle: '', Edition: '',
+          Author: '', Publisher: '', OERStatus: submission.oerStatus, MaterialType: '',
+          Rentable: '', TextOnly: '', Notes: '', EnrollmentEstimate: submission.enrollmentEstimate,
+          FacultyEmail: submission.facultyEmail, SubmittedBy: submission.submittedBy,
+          SubmittedByEmail: submission.submittedByEmail, Bookstore: submission.bookstore,
+          Department: submission.department, SubmissionGroupID: groupId,
+          SubmissionDate: submission.submissionDate, ProcessingStatus: 'New'
+        });
+      });
+    } else {
+      submission.terms.forEach(term => {
+        submission.textbooks.forEach(tb => {
+          data.push({
+            Term: term, Course: submission.course, Section: submission.section,
+            FacultyName: submission.facultyName, ISBN: tb.isbn, BookTitle: tb.title,
+            Edition: tb.edition, Author: tb.author, Publisher: tb.publisher,
+            OERStatus: submission.oerStatus, MaterialType: tb.materialType,
+            Rentable: tb.rentable ? 'Yes' : 'No', TextOnly: tb.textOnly ? 'Yes' : 'No',
+            Notes: tb.notes, EnrollmentEstimate: submission.enrollmentEstimate,
+            FacultyEmail: submission.facultyEmail, SubmittedBy: submission.submittedBy,
+            SubmittedByEmail: submission.submittedByEmail, Bookstore: submission.bookstore,
+            Department: submission.department, SubmissionGroupID: groupId,
+            SubmissionDate: submission.submissionDate, ProcessingStatus: 'New'
+          });
+        });
+      });
+    }
+
+    const ws = XLSX.utils.json_to_sheet(data, { header: headers });
+
+    // Auto-size columns
+    const colWidths = headers.map(h => {
+      const maxLen = Math.max(h.length, ...data.map(r => String(r[h] || '').length));
+      return { wch: Math.min(maxLen + 2, 40) };
+    });
+    ws['!cols'] = colWidths;
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Textbook Adoptions');
+
+    const filename = `textbook-adoption-${submission.course.replace(/\s+/g, '-')}-${submission.terms.join('-')}.xlsx`;
+    XLSX.writeFile(wb, filename);
+  }
+
+  function showSummary(submission) {
+    const container = document.getElementById('submissionSummary');
+    let html = `<table class="summary-table">
+      <tr><th>Field</th><th>Value</th></tr>
+      <tr><td>Faculty</td><td>${submission.facultyName} (${submission.facultyEmail})</td></tr>
+      <tr><td>Bookstore</td><td>${submission.bookstore}</td></tr>
+      <tr><td>Department</td><td>${submission.department}</td></tr>
+      <tr><td>Term(s)</td><td>${submission.terms.join(', ')}</td></tr>
+      <tr><td>Course</td><td>${submission.course} \u2014 Section ${submission.section}</td></tr>
+      <tr><td>Enrollment</td><td>${submission.enrollmentEstimate}</td></tr>
+      <tr><td>OER Status</td><td>${submission.oerStatus}</td></tr>`;
+
+    if (submission.textbooks.length > 0) {
+      submission.textbooks.forEach((tb, i) => {
+        html += `<tr><td>Textbook ${i + 1}</td><td><strong>${tb.title}</strong> by ${tb.author}<br>
+          ${tb.edition} ed. \u2014 ISBN: ${tb.isbn}<br>
+          Publisher: ${tb.publisher} \u2014 ${tb.materialType}
+          ${tb.rentable ? '<br>Rentable' : ''}${tb.textOnly ? '<br>Text only' : ''}
+          ${tb.notes ? '<br>Notes: ' + tb.notes : ''}
+        </td></tr>`;
+      });
+    }
+
+    html += `<tr><td>Submitted</td><td>${new Date(submission.submissionDate).toLocaleString()}</td></tr></table>`;
+    container.innerHTML = html;
+  }
+
+  function handleSubmit() {
+    const missing = validateCourseDetails();
+    if (missing.length > 0) {
+      alert('Please fill in the following fields:\n\n' + missing.join('\n'));
+      return;
+    }
+    const oer = document.querySelector('input[name="oer"]:checked')?.value;
+    if (oer !== 'OER Only' && savedTextbooks.length === 0) {
+      alert('Please save at least one textbook before submitting.');
+      return;
+    }
+
+    const submission = gatherSubmission();
+
+    // Generate and download XLSX
+    downloadXLSX(submission);
+
+    document.getElementById('adoptionForm').style.display = 'none';
+    document.getElementById('oerOnlyActions').style.display = 'none';
+    document.getElementById('confirmationPage').classList.add('visible');
+    showSummary(submission);
+
+    formDirty = false;
+    clearAutosave();
+  }
+
+  document.getElementById('submitFormBtn').addEventListener('click', handleSubmit);
+  document.getElementById('oerSubmitBtn').addEventListener('click', handleSubmit);
+
+  document.getElementById('oerAddClassBtn').addEventListener('click', function() {
+    submitAndReset(true);
+  });
+
+  // =====================
+  // RESET
+  // =====================
+  function submitAndReset(keepIdentity) {
+    savedTextbooks = [];
+    textbookCounter = 1;
+
+    document.getElementById('course').value = '';
+    document.getElementById('section').value = '';
+    document.getElementById('enrollment').value = '';
+    document.querySelectorAll('input[name="oer"]').forEach(r => r.checked = false);
+    document.querySelectorAll('input[name="terms"]').forEach(r => r.checked = false);
+    document.getElementById('textbookSection').classList.remove('visible');
+    document.getElementById('oerOnlyActions').style.display = 'none';
+    document.getElementById('savedTextbooksList').innerHTML = '';
+    document.getElementById('textbookCard').style.display = 'block';
+    document.getElementById('postSaveActions').style.display = 'none';
+    document.getElementById('submitNote').style.display = 'none';
+    document.getElementById('textbookCardTitle').textContent = 'Textbook 1';
+    clearTextbookForm();
+
+    if (!keepIdentity) {
+      document.getElementById('facultyName').value = '';
+      document.getElementById('facultyEmail').value = '';
+      document.querySelectorAll('input[name="bookstore"]').forEach(r => r.checked = false);
+      document.querySelectorAll('input[name="department"]').forEach(r => r.checked = false);
+      renderAY(getDefaultAY());
+    }
+
+    document.getElementById('adoptionForm').style.display = 'block';
+    document.getElementById('confirmationPage').classList.remove('visible');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  document.getElementById('submitAnotherClassBtn').addEventListener('click', function() {
+    submitAndReset(true);
+  });
+
+  document.getElementById('startOverBtn').addEventListener('click', function() {
+    submitAndReset(false);
+  });
+
+  // =====================
+  // AUTOSAVE
+  // =====================
+  function markDirty() {
+    formDirty = true;
+    clearTimeout(autosaveTimer);
+    autosaveTimer = setTimeout(autoSave, 2000);
+  }
+
+  function autoSave() {
+    try {
+      const state = {
+        facultyName: document.getElementById('facultyName').value,
+        facultyEmail: document.getElementById('facultyEmail').value,
+        bookstore: document.querySelector('input[name="bookstore"]:checked')?.value || '',
+        department: document.querySelector('input[name="department"]:checked')?.value || '',
+        ay: currentAY,
+        selectedTerms: getSelectedTerms(),
+        course: document.getElementById('course').value,
+        section: document.getElementById('section').value,
+        enrollment: document.getElementById('enrollment').value,
+        oer: document.querySelector('input[name="oer"]:checked')?.value || '',
+        savedTextbooks: savedTextbooks,
+        textbookCounter: textbookCounter
+      };
+      localStorage.setItem('textbookAdoptionDraft', JSON.stringify(state));
+      const indicator = document.getElementById('autosaveIndicator');
+      indicator.classList.add('visible');
+      setTimeout(() => indicator.classList.remove('visible'), 1500);
+    } catch(e) {}
+  }
+
+  function loadAutosave() {
+    try {
+      const saved = localStorage.getItem('textbookAdoptionDraft');
+      if (!saved) return;
+      const state = JSON.parse(saved);
+
+      document.getElementById('facultyName').value = state.facultyName || '';
+      document.getElementById('facultyEmail').value = state.facultyEmail || '';
+
+      if (state.bookstore) {
+        const el = document.querySelector(`input[name="bookstore"][value="${state.bookstore}"]`);
+        if (el) el.checked = true;
+      }
+      if (state.department) {
+        const el = document.querySelector(`input[name="department"][value="${state.department}"]`);
+        if (el) el.checked = true;
+      }
+      if (state.ay) renderAY(state.ay);
+      if (state.selectedTerms && state.selectedTerms.length > 0) {
+        state.selectedTerms.forEach(val => {
+          const el = document.querySelector(`input[name="terms"][value="${val}"]`);
+          if (el) el.checked = true;
+        });
+      }
+
+      document.getElementById('course').value = state.course || '';
+      document.getElementById('section').value = state.section || '';
+      document.getElementById('enrollment').value = state.enrollment || '';
+
+      if (state.oer) {
+        const el = document.querySelector(`input[name="oer"][value="${state.oer}"]`);
+        if (el) { el.checked = true; el.dispatchEvent(new Event('change')); }
+      }
+      if (state.savedTextbooks && state.savedTextbooks.length > 0) {
+        savedTextbooks = state.savedTextbooks;
+        textbookCounter = state.textbookCounter || savedTextbooks.length + 1;
+        renderSavedTextbooks();
+        document.getElementById('textbookCard').style.display = 'none';
+        document.getElementById('postSaveActions').style.display = 'flex';
+        document.getElementById('submitNote').style.display = 'block';
+      }
+    } catch(e) {}
+  }
+
+  function clearAutosave() {
+    try { localStorage.removeItem('textbookAdoptionDraft'); } catch(e) {}
+  }
+
+  window.addEventListener('beforeunload', function(e) {
+    if (formDirty) { e.preventDefault(); e.returnValue = ''; }
+  });
+
+  document.querySelectorAll('input, textarea').forEach(el => {
+    el.addEventListener('input', markDirty);
+    el.addEventListener('change', markDirty);
+  });
+
+  // =====================
+  // INIT
+  // =====================
+  renderAY(getDefaultAY());
+  loadAutosave();
+})();
+</script>
+</body>
+</html>

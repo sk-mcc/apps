@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuickPoll</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <main class="page-centered">
+    <div class="student-container">
+      <!-- Loading State -->
+      <div id="loadingState" class="student-status">
+        <div class="spinner"></div>
+        <p class="student-status__message">Connecting...</p>
+      </div>
+
+      <!-- Error State -->
+      <div id="errorState" class="student-status hidden">
+        <p class="student-status__message text-error" id="errorMessage">An error occurred.</p>
+        <a href="join.html" class="btn btn--primary mt-lg">Try Again</a>
+      </div>
+
+      <!-- Waiting for Session to Start -->
+      <div id="waitingState" class="student-status hidden">
+        <p class="text-xl font-semibold mb-sm">Connected!</p>
+        <p class="student-status__message">Waiting for the instructor to begin...</p>
+        <p class="text-sm text-muted mt-lg">Session: <span id="waitingSessionCode">----</span></p>
+      </div>
+
+      <!-- Question Active -->
+      <div id="questionState" class="hidden">
+        <p class="text-sm text-muted text-center mb-sm">
+          Question <span id="questionNumber">1</span>
+        </p>
+        <p class="student-question" id="questionText"></p>
+
+        <!-- Open Response -->
+        <div id="openResponse" class="open-response hidden">
+          <textarea
+            id="openInput"
+            class="form-textarea"
+            placeholder="Type your response..."
+            rows="4"
+          ></textarea>
+          <button type="button" id="submitOpenBtn" class="btn btn--primary btn--large btn--block">
+            Submit
+          </button>
+        </div>
+
+        <!-- Multiple Choice -->
+        <div id="choiceResponse" class="choice-options hidden"></div>
+
+        <!-- Rating Scale -->
+        <div id="ratingResponse" class="rating-scale hidden">
+          <div class="rating-scale__labels">
+            <span id="ratingMinLabel">Min</span>
+            <span id="ratingMaxLabel">Max</span>
+          </div>
+          <div class="rating-scale__options" id="ratingOptions"></div>
+        </div>
+      </div>
+
+      <!-- Response Submitted -->
+      <div id="submittedState" class="student-status hidden">
+        <p class="text-xl font-semibold text-success mb-sm">Answer Submitted!</p>
+        <p class="student-status__message">Waiting for the next question...</p>
+      </div>
+
+      <!-- Session Ended -->
+      <div id="endedState" class="student-status hidden">
+        <p class="text-xl font-semibold mb-sm">Thanks for participating!</p>
+        <p class="student-status__message">The session has ended.</p>
+        <a href="index.html" class="btn btn--primary mt-lg">Back to Home</a>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="js/student.js"></script>
+</body>
+</html>

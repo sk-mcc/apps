@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuickPoll - Classroom Polling</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <main class="page-centered">
+    <div class="landing">
+      <h1 class="landing__title">QuickPoll</h1>
+      <p class="landing__subtitle">Real-time classroom polling</p>
+
+      <!-- Loading state -->
+      <div id="loadingNav" class="landing__nav">
+        <div class="loading">
+          <div class="spinner"></div>
+        </div>
+      </div>
+
+      <!-- Instructor nav (authenticated) -->
+      <nav id="instructorNav" class="landing__nav hidden">
+        <a href="create.html" class="btn btn--primary btn--xlarge btn--block">
+          Create a Quiz
+        </a>
+        <a href="instructor.html" class="btn btn--secondary btn--xlarge btn--block">
+          Start a Session
+        </a>
+        <a href="join.html" class="btn btn--large btn--block">
+          Join a Session
+        </a>
+        <button type="button" id="logoutBtn" class="btn btn--ghost btn--block mt-md">
+          Sign Out
+        </button>
+      </nav>
+
+      <!-- Student nav (unauthenticated) -->
+      <nav id="studentNav" class="landing__nav hidden">
+        <a href="join.html" class="btn btn--primary btn--xlarge btn--block">
+          Join a Session
+        </a>
+        <a href="login.html" class="btn btn--ghost btn--block mt-md">
+          Instructor Login
+        </a>
+      </nav>
+    </div>
+  </main>
+
+  <script type="module">
+    import { onAuthChange, logout } from './js/auth.js';
+
+    const loadingNav = document.getElementById('loadingNav');
+    const instructorNav = document.getElementById('instructorNav');
+    const studentNav = document.getElementById('studentNav');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    // Listen for auth state changes
+    onAuthChange((user) => {
+      loadingNav.classList.add('hidden');
+
+      if (user) {
+        // Authenticated - show instructor nav
+        instructorNav.classList.remove('hidden');
+        studentNav.classList.add('hidden');
+      } else {
+        // Not authenticated - show student nav
+        studentNav.classList.remove('hidden');
+        instructorNav.classList.add('hidden');
+      }
+    });
+
+    // Logout handler
+    logoutBtn.addEventListener('click', async () => {
+      await logout();
+    });
+  </script>
+</body>
+</html>
