@@ -611,13 +611,15 @@ function generateDoorSign() {
                 delete onlineData[fullCode];
             }
 
-            // Parse days
+            // Parse days - tokenize into day abbreviations, handling Th before T
             const daysList = [];
-            const rawDays = tMatch[1].toUpperCase();
+            let rawDays = tMatch[1].toUpperCase().replace(/\//g, '');
+            // Extract multi-char day "TH" first to avoid T/TH collision
+            if (rawDays.includes('TH')) { daysList.push('Th'); rawDays = rawDays.replace(/TH/g, ''); }
             if (rawDays.includes('M')) daysList.push('M');
             if (rawDays.includes('T')) daysList.push('T');
             if (rawDays.includes('W')) daysList.push('W');
-            if (rawDays.includes('R') || rawDays.includes('TH')) daysList.push('Th');
+            if (rawDays.includes('R') && !daysList.includes('Th')) daysList.push('Th');
             if (rawDays.includes('F')) daysList.push('F');
 
             const startVal = getMinutes(tMatch[2]);
@@ -800,10 +802,9 @@ function generateDoorSign() {
     .calendar {
         display: grid;
         grid-template-columns: 60px repeat(${numDayCols}, 1fr);
-        grid-template-rows: 35px repeat(${totalSlots}, minmax(18px, 1fr));
+        grid-template-rows: 35px repeat(${totalSlots}, 1fr);
         width: 100%;
         max-width: 850px;
-        min-height: 75vh;
         border: none;
     }
     .header {
@@ -837,8 +838,10 @@ function generateDoorSign() {
         overflow: hidden;
     }
     @media print {
-        @page { margin: 0.5in; }
-        .calendar { height: auto; }
+        @page { margin: 0.4in; size: letter portrait; }
+        body { padding: 0; }
+        h1 { font-size: 22px; margin-bottom: 12px; }
+        .calendar { height: calc(100vh - 100px); }
     }
 </style>
 </head>
