@@ -2,10 +2,10 @@
 
 ## Repository Structure
 - **Working directory for apps:** `apps/` (the git root is one level above)
-- **Live site (GitHub Pages):** `sk-mcc/apps` repo → https://sk-mcc.github.io/apps/
-- **Development remote:** `origin` → `https://github.com/sk-mcc/faculty-tools-github.git`, branch `main`
+- **Remote:** `origin` → `https://github.com/sk-mcc/apps.git`, branch `main`
+- **GitHub Pages:** https://sk-mcc.github.io/apps/
 - **Owner:** sk-mcc GitHub account
-- **IMPORTANT:** The GitHub Pages site serves from the `sk-mcc/apps` repo, NOT `faculty-tools-github`. Always push to `sk-mcc/apps` for changes to go live.
+- **Note:** The old `sk-mcc/faculty-tools-github` repo has been archived. All work goes to `sk-mcc/apps`.
 
 ## Apps Overview
 
