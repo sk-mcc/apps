@@ -1,11 +1,20 @@
-# Faculty Tools GitHub
+# Faculty Tools
 
 ## Repository Structure
-- **Working directory for apps:** `apps/` (the git root is one level above)
+- **Git root:** `/home/skarlis/faculty-tools-github/` (one level above the apps)
 - **Remote:** `origin` → `https://github.com/sk-mcc/apps.git`, branch `main`
 - **GitHub Pages:** https://sk-mcc.github.io/apps/
 - **Owner:** sk-mcc GitHub account
 - **Note:** The old `sk-mcc/faculty-tools-github` repo has been archived. All work goes to `sk-mcc/apps`.
+
+## CRITICAL: File Paths
+- The git root is `/home/skarlis/faculty-tools-github/` but the repo tree has NO `apps/` prefix.
+- Files tracked by git live at the **repo root level**: e.g. `faculty-tools/door-sign.html`, `QuickPoll/index.html`
+- There is also a local `apps/` subdirectory with working copies — these are NOT tracked by git.
+- **Always edit and stage files relative to the repo root**, not from `apps/`. For example:
+  - Correct: `git add faculty-tools/door-sign.html` (from repo root)
+  - Wrong: editing `apps/faculty-tools/door-sign.html` (untracked copy)
+- When committing, run from the repo root or use paths relative to it.
 
 ## Apps Overview
 
@@ -25,8 +34,7 @@
 ### `podium/` — (needs documentation)
 
 ## Committing & Pushing
-- Commit from the `apps/` directory (that's the git working directory)
-- Push to `origin main`
+- Push to `origin main` — this is what GitHub Pages serves
 - Commit messages should be descriptive of the what and why
 
 ## TODO
