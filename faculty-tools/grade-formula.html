@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grade Formula Generator</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧮</text></svg>">
+    <style>
+        :root {
+            --bg-primary: #f8fafc;
+            --bg-card: #ffffff;
+            --bg-input: #ffffff;
+            --bg-code: #f1f5f9;
+            --color-accent: #0891b2;
+            --color-accent-hover: #0e7490;
+            --color-text: #1e293b;
+            --color-text-dim: #64748b;
+            --color-error: #b91c1c;
+            --border-color: #e2e8f0;
+            --shadow: 0 1px 3px rgba(0,0,0,0.1);
+            --instruction-bg: #f0f9ff;
+            --success-bg: #ecfdf5;
+            --success-border: #a7f3d0;
+            --success-text: #065f46;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0a0f1a;
+            --bg-card: #111827;
+            --bg-input: #1f2937;
+            --bg-code: #0f1825;
+            --color-accent: #22d3ee;
+            --color-accent-hover: #67e8f9;
+            --color-text: #f1f5f9;
+            --color-text-dim: #94a3b8;
+            --color-error: #fca5a5;
+            --border-color: #374151;
+            --shadow: 0 1px 3px rgba(0,0,0,0.4);
+            --instruction-bg: #0c1929;
+            --success-bg: #022c22;
+            --success-border: #047857;
+            --success-text: #a7f3d0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--color-text);
+            line-height: 1.6;
+            padding: 2rem;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .skip-link {
+            position: absolute;
+            left: -9999px;
+            top: auto;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+        }
+
+        .skip-link:focus {
+            position: static;
+            width: auto;
+            height: auto;
+            padding: 0.5rem 1rem;
+            background: var(--color-accent);
+            color: #fff;
+            border-radius: 0.25rem;
+        }
+
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 0.5rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+        }
+
+        .theme-toggle {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 2rem;
+            padding: 0.25rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        .theme-toggle:focus-within {
+            outline: 2px solid var(--color-accent);
+            outline-offset: 2px;
+        }
+
+        .theme-toggle button {
+            background: transparent;
+            border: none;
+            padding: 0.35rem 0.6rem;
+            border-radius: 1.5rem;
+            font-size: 0.85rem;
+            font-family: inherit;
+            color: var(--color-text);
+            cursor: pointer;
+            transition: background-color 0.2s, color 0.2s;
+        }
+
+        .theme-toggle button.active {
+            background: var(--color-accent);
+            color: white;
+        }
+
+        .subtitle {
+            color: var(--color-text-dim);
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+
+        .instruction-box {
+            background-color: var(--instruction-bg);
+            border-left: 4px solid var(--color-accent);
+            padding: 0.75rem 1rem;
+            border-radius: 0 0.5rem 0.5rem 0;
+            font-size: 0.95rem;
+            transition: background-color 0.3s;
+        }
+
+        .instruction-box ol {
+            padding-left: 1.25rem;
+        }
+
+        .instruction-box li {
+            margin-bottom: 0.25rem;
+        }
+
+        .instruction-box li:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 0.4rem;
+            font-size: 0.95rem;
+        }
+
+        .field-hint {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--color-text-dim);
+            margin-top: 0.25rem;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            max-width: 220px;
+            padding: 0.6rem 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 1rem;
+            background: var(--bg-input);
+            color: var(--color-text);
+            text-transform: uppercase;
+            transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+        }
+
+        input[type="text"]:focus {
+            outline: none;
+            border-color: var(--color-accent);
+            box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.2);
+        }
+
+        input[type="text"][aria-invalid="true"] {
+            border-color: var(--color-error);
+        }
+
+        .error-msg {
+            display: none;
+            color: var(--color-error);
+            font-size: 0.85rem;
+            margin-top: 0.4rem;
+        }
+
+        .error-msg.show {
+            display: block;
+        }
+
+        .formula-output {
+            background: var(--bg-code);
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            padding: 1rem;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-break: break-all;
+            color: var(--color-text);
+            min-height: 4rem;
+        }
+
+        .formula-output.placeholder {
+            color: var(--color-text-dim);
+            font-style: italic;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: var(--color-accent);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 0.375rem;
+            font-size: 0.95rem;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn:hover:not(:disabled) {
+            background: var(--color-accent-hover);
+        }
+
+        .btn:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .btn:focus-visible {
+            outline: 3px solid var(--color-accent);
+            outline-offset: 2px;
+        }
+
+        .copy-status {
+            font-size: 0.9rem;
+            color: var(--success-text);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .copy-status.show {
+            opacity: 1;
+        }
+
+        .scale-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .scale-table th,
+        .scale-table td {
+            border: 1px solid var(--border-color);
+            padding: 0.4rem 0.75rem;
+            text-align: left;
+        }
+
+        .scale-table th {
+            background: var(--instruction-bg);
+            font-weight: 600;
+        }
+
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        @media (max-width: 600px) {
+            body { padding: 1rem; }
+            h1 { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to main content</a>
+
+<div class="container">
+    <div class="header-row">
+        <h1>Grade Formula Generator</h1>
+        <div class="theme-toggle" role="group" aria-label="Theme">
+            <button type="button" id="theme-light-btn" onclick="setTheme('light')">Light</button>
+            <button type="button" id="theme-dark-btn" onclick="setTheme('dark')">Dark</button>
+        </div>
+    </div>
+    <p class="subtitle">Build the Excel letter-grade formula for a Canvas gradebook export</p>
+
+    <main id="main">
+
+        <div class="card">
+            <h2>How to Use</h2>
+            <div class="instruction-box">
+                <ol>
+                    <li>In your Canvas gradebook export, find the cell with the first student's <strong>final grade percentage</strong> (e.g. <code>CJ2</code>).</li>
+                    <li>Type that cell reference below.</li>
+                    <li>Copy the generated formula and paste it into the cell <em>just to the right</em> of that final grade.</li>
+                    <li>Drag the formula down to fill the column for every student.</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="form-group">
+                <label for="cell-input">First student's final-grade cell</label>
+                <input
+                    type="text"
+                    id="cell-input"
+                    name="cell-input"
+                    placeholder="CJ2"
+                    autocomplete="off"
+                    spellcheck="false"
+                    aria-describedby="cell-hint cell-error"
+                    aria-invalid="false"
+                >
+                <span id="cell-hint" class="field-hint">Use the column letters and row number, like <code>CJ2</code> or <code>AB3</code>.</span>
+                <p id="cell-error" class="error-msg" role="alert"></p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>
+                <label for="formula-output" style="display:inline; margin:0; font-weight:600;">Formula</label>
+            </h2>
+            <output
+                id="formula-output"
+                class="formula-output placeholder"
+                aria-live="polite"
+            >Enter a cell reference above to generate the formula.</output>
+            <div class="button-row">
+                <button type="button" class="btn" id="copy-btn" disabled>Copy formula</button>
+                <span id="copy-status" class="copy-status" role="status" aria-live="polite"></span>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Grading scale this formula uses</h2>
+            <p class="field-hint" style="margin-top:0; margin-bottom:0.75rem;">Rounding: anything within half a percentage point of the next letter rounds up (e.g.&nbsp;89.5 → A-). The A cutoff stays a hard 93.</p>
+            <table class="scale-table" aria-label="Grading scale">
+                <thead>
+                    <tr><th scope="col">Score</th><th scope="col">Letter</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>93 and above</td><td>A</td></tr>
+                    <tr><td>90&ndash;92 (rounded)</td><td>A&minus;</td></tr>
+                    <tr><td>87&ndash;89 (rounded)</td><td>B+</td></tr>
+                    <tr><td>83&ndash;86 (rounded)</td><td>B</td></tr>
+                    <tr><td>80&ndash;82 (rounded)</td><td>B&minus;</td></tr>
+                    <tr><td>77&ndash;79 (rounded)</td><td>C+</td></tr>
+                    <tr><td>73&ndash;76 (rounded)</td><td>C</td></tr>
+                    <tr><td>70&ndash;72 (rounded)</td><td>C&minus;</td></tr>
+                    <tr><td>67&ndash;69 (rounded)</td><td>D+</td></tr>
+                    <tr><td>63&ndash;66 (rounded)</td><td>D</td></tr>
+                    <tr><td>60&ndash;62 (rounded)</td><td>D&minus;</td></tr>
+                    <tr><td>Below 60 (rounded)</td><td>F</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
+
+<script>
+    // ── Theme management ────────────────────────────────────────────
+    function setTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        const lightBtn = document.getElementById('theme-light-btn');
+        const darkBtn = document.getElementById('theme-dark-btn');
+        lightBtn.classList.toggle('active', theme === 'light');
+        darkBtn.classList.toggle('active', theme === 'dark');
+        lightBtn.setAttribute('aria-pressed', theme === 'light');
+        darkBtn.setAttribute('aria-pressed', theme === 'dark');
+        try { localStorage.setItem('faculty-tools-theme', theme); } catch (e) {}
+    }
+
+    (function initTheme() {
+        let saved = null;
+        try { saved = localStorage.getItem('faculty-tools-theme'); } catch (e) {}
+        if (saved === 'light' || saved === 'dark') {
+            setTheme(saved);
+        } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            setTheme('dark');
+        } else {
+            setTheme('light');
+        }
+    })();
+
+    // ── Formula generation ──────────────────────────────────────────
+    const CELL_PATTERN = /^([A-Z]+)(\d+)$/;
+
+    const cellInput = document.getElementById('cell-input');
+    const cellError = document.getElementById('cell-error');
+    const formulaOutput = document.getElementById('formula-output');
+    const copyBtn = document.getElementById('copy-btn');
+    const copyStatus = document.getElementById('copy-status');
+
+    const PLACEHOLDER_TEXT = 'Enter a cell reference above to generate the formula.';
+
+    function buildFormula(cell) {
+        return (
+            '=IF(' + cell + '>=93,"A",' +
+            'IF(ROUND(' + cell + ',0)>=90,"A-",' +
+            'IF(ROUND(' + cell + ',0)>=87,"B+",' +
+            'IF(ROUND(' + cell + ',0)>=83,"B",' +
+            'IF(ROUND(' + cell + ',0)>=80,"B-",' +
+            'IF(ROUND(' + cell + ',0)>=77,"C+",' +
+            'IF(ROUND(' + cell + ',0)>=73,"C",' +
+            'IF(ROUND(' + cell + ',0)>=70,"C-",' +
+            'IF(ROUND(' + cell + ',0)>=67,"D+",' +
+            'IF(ROUND(' + cell + ',0)>=63,"D",' +
+            'IF(ROUND(' + cell + ',0)>=60,"D-","F")))))))))))'
+        );
+    }
+
+    function setError(msg) {
+        if (msg) {
+            cellError.textContent = msg;
+            cellError.classList.add('show');
+            cellInput.setAttribute('aria-invalid', 'true');
+        } else {
+            cellError.textContent = '';
+            cellError.classList.remove('show');
+            cellInput.setAttribute('aria-invalid', 'false');
+        }
+    }
+
+    function setPlaceholderOutput() {
+        formulaOutput.textContent = PLACEHOLDER_TEXT;
+        formulaOutput.classList.add('placeholder');
+        copyBtn.disabled = true;
+    }
+
+    function update() {
+        const raw = cellInput.value.trim().toUpperCase();
+        // keep the text in the field uppercase for visual feedback
+        if (cellInput.value !== raw) cellInput.value = raw;
+
+        if (!raw) {
+            setError('');
+            setPlaceholderOutput();
+            return;
+        }
+
+        const match = raw.match(CELL_PATTERN);
+        if (!match) {
+            setError('Use letters then a number, like CJ2.');
+            setPlaceholderOutput();
+            return;
+        }
+
+        setError('');
+        formulaOutput.textContent = buildFormula(raw);
+        formulaOutput.classList.remove('placeholder');
+        copyBtn.disabled = false;
+    }
+
+    cellInput.addEventListener('input', update);
+
+    // ── Copy ────────────────────────────────────────────────────────
+    let copyStatusTimer = null;
+
+    function flashStatus(msg, ok) {
+        copyStatus.textContent = msg;
+        copyStatus.style.color = ok ? 'var(--success-text)' : 'var(--color-error)';
+        copyStatus.classList.add('show');
+        if (copyStatusTimer) clearTimeout(copyStatusTimer);
+        copyStatusTimer = setTimeout(() => copyStatus.classList.remove('show'), 2500);
+    }
+
+    async function copyFormula() {
+        if (copyBtn.disabled) return;
+        const text = formulaOutput.textContent;
+        try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                await navigator.clipboard.writeText(text);
+                flashStatus('Copied!', true);
+                return;
+            }
+            // Fallback for older browsers
+            const range = document.createRange();
+            range.selectNodeContents(formulaOutput);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+            const ok = document.execCommand('copy');
+            sel.removeAllRanges();
+            flashStatus(ok ? 'Copied!' : 'Press Ctrl/Cmd+C to copy', ok);
+        } catch (err) {
+            flashStatus('Could not copy automatically — select the text and copy manually.', false);
+        }
+    }
+
+    copyBtn.addEventListener('click', copyFormula);
+
+    // Initialize
+    setPlaceholderOutput();
+</script>
+
+</body>
+</html>
