@@ -289,6 +289,39 @@
             opacity: 1;
         }
 
+        .round-toggle {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.6rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid var(--border-color);
+            font-size: 0.95rem;
+        }
+
+        .round-toggle input[type="checkbox"] {
+            margin-top: 0.2rem;
+            width: 1.05rem;
+            height: 1.05rem;
+            accent-color: var(--color-accent);
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .round-toggle label {
+            margin: 0;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .round-toggle .toggle-hint {
+            display: block;
+            font-weight: 400;
+            font-size: 0.85rem;
+            color: var(--color-text-dim);
+            margin-top: 0.15rem;
+        }
+
         .scale-table {
             width: 100%;
             border-collapse: collapse;
@@ -381,6 +414,13 @@
                 class="formula-output placeholder"
                 aria-live="polite"
             >Enter a cell reference above to generate the formula.</output>
+            <div class="round-toggle">
+                <input type="checkbox" id="round-toggle" checked>
+                <label for="round-toggle">
+                    Round grades within half a percentage point
+                    <span class="toggle-hint">When on, scores like 92.5 round up to A and 89.5 rounds up to A&minus;. Turn off for strict cutoffs (a 92.99 stays a B+).</span>
+                </label>
+            </div>
             <div class="button-row">
                 <button type="button" class="btn" id="copy-btn" disabled>Copy formula</button>
                 <span id="copy-status" class="copy-status" role="status" aria-live="polite"></span>
@@ -389,7 +429,7 @@
 
         <div class="card">
             <h2>Grading scale this formula uses</h2>
-            <p class="field-hint" style="margin-top:0; margin-bottom:0.75rem;">Rounding: anything within half a percentage point of the next letter rounds up (e.g.&nbsp;89.5 → A-). The A cutoff stays a hard 93.</p>
+            <p id="scale-description" class="field-hint" style="margin-top:0; margin-bottom:0.75rem;"></p>
             <table class="scale-table" aria-label="Grading scale">
                 <thead>
                     <tr><th scope="col">Score</th><th scope="col">Letter</th></tr>
@@ -446,23 +486,23 @@
     const formulaOutput = document.getElementById('formula-output');
     const copyBtn = document.getElementById('copy-btn');
     const copyStatus = document.getElementById('copy-status');
+    const roundToggle = document.getElementById('round-toggle');
+    const scaleDescription = document.getElementById('scale-description');
 
     const PLACEHOLDER_TEXT = 'Enter a cell reference above to generate the formula.';
+    const THRESHOLDS = [
+        [93, 'A'], [90, 'A-'], [87, 'B+'], [83, 'B'], [80, 'B-'],
+        [77, 'C+'], [73, 'C'], [70, 'C-'], [67, 'D+'], [63, 'D'], [60, 'D-']
+    ];
 
-    function buildFormula(cell) {
-        return (
-            '=IF(' + cell + '>=93,"A",' +
-            'IF(ROUND(' + cell + ',0)>=90,"A-",' +
-            'IF(ROUND(' + cell + ',0)>=87,"B+",' +
-            'IF(ROUND(' + cell + ',0)>=83,"B",' +
-            'IF(ROUND(' + cell + ',0)>=80,"B-",' +
-            'IF(ROUND(' + cell + ',0)>=77,"C+",' +
-            'IF(ROUND(' + cell + ',0)>=73,"C",' +
-            'IF(ROUND(' + cell + ',0)>=70,"C-",' +
-            'IF(ROUND(' + cell + ',0)>=67,"D+",' +
-            'IF(ROUND(' + cell + ',0)>=63,"D",' +
-            'IF(ROUND(' + cell + ',0)>=60,"D-","F")))))))))))'
-        );
+    function buildFormula(cell, round) {
+        const expr = round ? 'ROUND(' + cell + ',0)' : cell;
+        let formula = '';
+        for (const [cutoff, letter] of THRESHOLDS) {
+            formula += 'IF(' + expr + '>=' + cutoff + ',"' + letter + '",';
+        }
+        formula += '"F"' + ')'.repeat(THRESHOLDS.length);
+        return '=' + formula;
     }
 
     function setError(msg) {
@@ -483,10 +523,19 @@
         copyBtn.disabled = true;
     }
 
+    function updateScaleDescription(round) {
+        scaleDescription.textContent = round
+            ? 'Rounding is on: anything within half a percentage point of the next letter rounds up (e.g. 92.5 → A, 89.5 → A−). Below 59.5 rounds to F.'
+            : 'Rounding is off: strict cutoffs only — a 92.99 stays a B+ and an 89.99 stays a B+.';
+    }
+
     function update() {
         const raw = cellInput.value.trim().toUpperCase();
         // keep the text in the field uppercase for visual feedback
         if (cellInput.value !== raw) cellInput.value = raw;
+
+        const round = roundToggle.checked;
+        updateScaleDescription(round);
 
         if (!raw) {
             setError('');
@@ -502,12 +551,13 @@
         }
 
         setError('');
-        formulaOutput.textContent = buildFormula(raw);
+        formulaOutput.textContent = buildFormula(raw, round);
         formulaOutput.classList.remove('placeholder');
         copyBtn.disabled = false;
     }
 
     cellInput.addEventListener('input', update);
+    roundToggle.addEventListener('change', update);
 
     // ── Copy ────────────────────────────────────────────────────────
     let copyStatusTimer = null;
@@ -547,6 +597,7 @@
 
     // Initialize
     setPlaceholderOutput();
+    updateScaleDescription(roundToggle.checked);
 </script>
 
 </body>
