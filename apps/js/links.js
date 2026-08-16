@@ -150,13 +150,6 @@ const TOOLS = [
   // ─────────────────────────────────────────────────────────────────────────
 
   {
-    name: "QuickPoll",
-    url: "QuickPoll/index.html",
-    icon: "bar-chart-2",
-    description: "Real-time classroom polling for quizzes and interactive sessions."
-  },
-
-  {
     name: "Faculty Selection Schedule Tool",
     url: "selection-tool/selection-tool.html",
     icon: "files",

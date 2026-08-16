@@ -5,8 +5,7 @@
 
 document.addEventListener('DOMContentLoaded', () => {
   const grid = document.getElementById('tools-grid');
-  const countEl = document.getElementById('tool-count');
-  
+
   if (!grid) {
     console.error('Could not find #tools-grid element');
     return;
@@ -26,11 +25,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (validTools.length === 0) {
     grid.innerHTML = '<p class="error-message">No tools configured. Edit js/links.js to add tools.</p>';
     return;
-  }
-
-  // Update tool count
-  if (countEl) {
-    countEl.textContent = validTools.length;
   }
 
   // Render the cards

@@ -184,13 +184,6 @@ const TOOLS = [
     description: "Build the Excel letter-grade formula for a Canvas gradebook export — just enter the cell of the first student's final grade."
   },
 
-  {
-    name: "QuickPoll",
-    url: "QuickPoll/index.html",
-    icon: "bar-chart-2",
-    description: "Real-time classroom polling for quizzes and interactive sessions. Requires login."
-  },
-
 
   // ─────────────────────────────────────────────────────────────────────────
   // ADD MORE TOOLS ABOVE THIS LINE
