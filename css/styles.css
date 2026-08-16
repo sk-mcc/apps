@@ -235,27 +235,11 @@ body {
   margin: 0 auto;
 }
 
-.tool-count {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-xs);
-  margin-top: var(--space-md);
-  padding: var(--space-xs) var(--space-md);
-  background: var(--color-accent-light);
-  color: var(--color-accent);
+.site-note {
+  max-width: 40rem;
+  margin: var(--space-md) auto 0;
   font-size: var(--font-size-sm);
-  font-weight: 600;
-  border-radius: var(--radius-xl);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .tool-count {
-    color: var(--color-accent);
-  }
-}
-
-[data-theme="dark"] .tool-count {
-  color: var(--color-accent);
+  color: var(--color-text-secondary);
 }
 
 /* ───────────────────────────────────────────────────────────────────────────
