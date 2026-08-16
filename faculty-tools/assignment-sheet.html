@@ -15,13 +15,20 @@
             --color-accent: #0891b2;
             --color-accent-hover: #0e7490;
             --color-text: #1e293b;
-            --color-text-dim: #64748b;
+            --color-text-dim: #475569;
             --border-color: #e2e8f0;
             --shadow: 0 1px 3px rgba(0,0,0,0.1);
             --instruction-bg: #f0f9ff;
             --success-bg: #ecfdf5;
             --success-border: #a7f3d0;
             --success-text: #065f46;
+            --badge-bg: #fef3c7;
+            --badge-text: #713f12;
+            --badge-border: #fcd34d;
+            --row-muted: #f1f5f9;
+            --warn-bg: #fef2f2;
+            --warn-border: #b91c1c;
+            --warn-text: #7f1d1d;
         }
 
         [data-theme="dark"] {
@@ -33,13 +40,20 @@
             --color-accent: #22d3ee;
             --color-accent-hover: #67e8f9;
             --color-text: #f1f5f9;
-            --color-text-dim: #94a3b8;
+            --color-text-dim: #cbd5e1;
             --border-color: #374151;
             --shadow: 0 1px 3px rgba(0,0,0,0.4);
             --instruction-bg: #0c1929;
             --success-bg: #022c22;
             --success-border: #047857;
             --success-text: #a7f3d0;
+            --badge-bg: #422006;
+            --badge-text: #fde68a;
+            --badge-border: #a16207;
+            --row-muted: #0f1626;
+            --warn-bg: #2a0d0d;
+            --warn-border: #f87171;
+            --warn-text: #fecaca;
         }
 
         * {
@@ -67,6 +81,7 @@
             justify-content: space-between;
             align-items: flex-start;
             margin-bottom: 0.5rem;
+            gap: 1rem;
         }
 
         h1 {
@@ -95,7 +110,11 @@
 
         .theme-toggle span.active {
             background: var(--color-accent);
-            color: white;
+            color: #ffffff;
+        }
+
+        [data-theme="dark"] .theme-toggle span.active {
+            color: #06202b;
         }
 
         .subtitle {
@@ -123,16 +142,11 @@
             transition: background-color 0.3s;
         }
 
-        .instruction-box ul {
-            margin: 0;
-            padding-left: 1.25rem;
+        .instruction-box p {
+            margin-bottom: 0.6rem;
         }
 
-        .instruction-box li {
-            margin-bottom: 0.15rem;
-        }
-
-        .instruction-box li:last-child {
+        .instruction-box p:last-child {
             margin-bottom: 0;
         }
 
@@ -160,10 +174,9 @@
             transition: background-color 0.3s, border-color 0.3s, color 0.3s;
         }
 
-        textarea:focus, input:focus {
-            outline: none;
-            border-color: var(--color-accent);
-            box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.1);
+        textarea:focus, input:focus, select:focus, button:focus-visible {
+            outline: 2px solid var(--color-accent);
+            outline-offset: 1px;
         }
 
         textarea {
@@ -174,23 +187,23 @@
 
         .btn {
             background: var(--color-accent);
-            color: white;
+            color: #ffffff;
             border: none;
             padding: 0.75rem 1.5rem;
             border-radius: 0.375rem;
             font-size: 1rem;
             font-weight: 500;
             cursor: pointer;
+            min-height: 44px;
             transition: background 0.2s;
+        }
+
+        [data-theme="dark"] .btn {
+            color: #06202b;
         }
 
         .btn:hover {
             background: var(--color-accent-hover);
-        }
-
-        .btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
         }
 
         .btn-full {
@@ -201,6 +214,10 @@
             background: transparent;
             color: var(--color-accent);
             border: 1px solid var(--color-accent);
+        }
+
+        [data-theme="dark"] .btn-secondary {
+            color: var(--color-accent);
         }
 
         .btn-secondary:hover {
@@ -215,16 +232,6 @@
             display: block;
         }
 
-        .button-row {
-            display: flex;
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-
-        .button-row .btn {
-            flex: 1;
-        }
-
         .success-msg {
             background: var(--success-bg);
             border: 1px solid var(--success-border);
@@ -232,7 +239,16 @@
             padding: 0.75rem 1rem;
             border-radius: 0.375rem;
             margin-bottom: 1rem;
+            font-size: 0.9rem;
             transition: background-color 0.3s, border-color 0.3s, color 0.3s;
+        }
+
+        .success-msg p {
+            margin-bottom: 0.35rem;
+        }
+
+        .success-msg p:last-child {
+            margin-bottom: 0;
         }
 
         .collapsible-header {
@@ -240,6 +256,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            min-height: 24px;
         }
 
         .collapsible-header::after {
@@ -272,59 +289,107 @@
             font-size: 0.85rem;
         }
 
+        caption {
+            caption-side: top;
+            text-align: left;
+            font-size: 0.85rem;
+            color: var(--color-text-dim);
+            padding-bottom: 0.5rem;
+        }
+
         th, td {
             border: 1px solid var(--border-color);
-            padding: 0.5rem;
+            padding: 0.4rem;
             text-align: left;
+            vertical-align: middle;
         }
 
         th {
             background: var(--bg-table-header);
             font-weight: 600;
             white-space: nowrap;
+            font-size: 0.8rem;
         }
 
-        tr:nth-child(even) {
+        th .col-ref {
+            display: block;
+            font-weight: 400;
+            font-size: 0.7rem;
+            color: var(--color-text-dim);
+        }
+
+        tbody tr:nth-child(even) {
             background: var(--bg-table-row-alt);
+        }
+
+        tbody tr.is-colisted {
+            background: var(--row-muted);
         }
 
         td input {
             width: 100%;
-            padding: 0.25rem;
+            padding: 0.3rem;
             border: 1px solid transparent;
             background: transparent;
             color: var(--color-text);
             font-family: inherit;
             font-size: 0.85rem;
+            min-height: 28px;
         }
 
         td input:focus {
             border-color: var(--color-accent);
             background: var(--bg-input);
-            outline: none;
         }
 
         td input.narrow {
-            width: 50px;
+            width: 52px;
             text-align: center;
         }
 
-        td input.time-input {
-            width: 120px;
+        td select {
+            width: 100%;
+            padding: 0.3rem;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--color-text);
+            font-family: inherit;
+            font-size: 0.85rem;
+            min-height: 28px;
+        }
+
+        td select:focus {
+            border-color: var(--color-accent);
+            background: var(--bg-input);
+        }
+
+        .badge {
+            display: inline-block;
+            background: var(--badge-bg);
+            color: var(--badge-text);
+            border: 1px solid var(--badge-border);
+            border-radius: 0.25rem;
+            padding: 0.1rem 0.4rem;
+            font-size: 0.7rem;
+            white-space: nowrap;
         }
 
         .delete-btn {
-            background: #ef4444;
-            color: white;
-            border: none;
+            background: transparent;
+            color: var(--color-text);
+            border: 1px solid var(--border-color);
             padding: 0.25rem 0.5rem;
             border-radius: 0.25rem;
             cursor: pointer;
-            font-size: 0.75rem;
+            font-size: 0.8rem;
+            min-height: 28px;
+            min-width: 28px;
         }
 
         .delete-btn:hover {
             background: #dc2626;
+            border-color: #dc2626;
+            color: #ffffff;
         }
 
         .add-row-btn {
@@ -333,13 +398,49 @@
             padding: 0.5rem 1rem;
         }
 
-        /* TSV output */
-        .tsv-section {
-            margin-top: 1.5rem;
+        tfoot td {
+            font-weight: 600;
+            background: var(--bg-table-header);
         }
 
-        .tsv-section h3 {
+        .warning-banner {
+            display: none;
+            background: var(--warn-bg);
+            border: 2px solid var(--warn-border);
+            border-left-width: 8px;
+            color: var(--warn-text);
+            border-radius: 0.375rem;
+            padding: 1rem 1.25rem;
+            margin-top: 1.5rem;
+            font-size: 0.95rem;
+        }
+
+        .warning-banner.show {
+            display: block;
+        }
+
+        .warning-banner strong {
+            display: block;
+            font-size: 1.05rem;
+            margin-bottom: 0.35rem;
+        }
+
+        /* Paste blocks */
+        .paste-block {
+            margin-top: 1.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.5rem;
+            padding: 1rem;
+        }
+
+        .paste-block h3 {
             font-size: 1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .paste-block .where {
+            font-size: 0.85rem;
+            color: var(--color-text-dim);
             margin-bottom: 0.75rem;
         }
 
@@ -350,21 +451,60 @@
             padding: 1rem;
             font-family: 'Consolas', 'Monaco', monospace;
             font-size: 0.8rem;
-            white-space: pre-wrap;
-            word-break: break-all;
-            max-height: 200px;
+            white-space: pre;
+            overflow-x: auto;
+            max-height: 220px;
             overflow-y: auto;
         }
 
+        .button-row {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.75rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
         .copy-feedback {
-            display: none;
+            visibility: hidden;
             color: var(--success-text);
             font-size: 0.85rem;
-            margin-left: 1rem;
+            font-weight: 500;
         }
 
         .copy-feedback.show {
-            display: inline;
+            visibility: visible;
+        }
+
+        .check-note {
+            margin-top: 1.5rem;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .info-note {
+            font-size: 0.9rem;
+            color: var(--color-text-dim);
+            margin-top: 1.5rem;
+            border-left: 4px solid var(--color-accent);
+            padding: 0.5rem 0 0.5rem 0.75rem;
+        }
+
+        .info-note p {
+            margin-bottom: 0.35rem;
+        }
+
+        .info-note ul {
+            margin: 0.35rem 0 0;
+            padding-left: 1.25rem;
+        }
+
+        .info-note li {
+            margin-bottom: 0.15rem;
+        }
+
+        .info-note li:last-child {
+            margin-bottom: 0;
         }
     </style>
 </head>
@@ -378,7 +518,7 @@
             <span id="theme-dark">Dark</span>
         </div>
     </div>
-    <p class="subtitle">Convert Self-Service schedule into FAS table format</p>
+    <p class="subtitle">Convert a Self-Service schedule into the Faculty Assignment Sheet table</p>
 
     <div class="card">
         <div class="collapsible-header collapsed" onclick="toggleInstructions()">
@@ -386,12 +526,10 @@
         </div>
         <div id="instructions" class="collapsible-content hidden">
             <div class="instruction-box">
-                <ul>
-                    <li>Paste your schedule from Self-Service into the text area</li>
-                    <li>Click Generate to parse the data into a table</li>
-                    <li>Edit any cells directly in the table if needed</li>
-                    <li>Copy the TSV output or download as a file</li>
-                </ul>
+                <p>Paste your schedule from Self-Service into the box below and click Generate. The tool reads it into a table you can edit.</p>
+                <p>The Section Modality column on the form is a merged cell, and Excel refuses any paste that crosses one. The output is therefore split into two blocks that sit on either side of it. Copy the first block, click the first cell of the Course Code column, and paste. Then copy the second block, click the first cell of the Begin Date column, and paste.</p>
+                <p>On the Fall and Winter tabs those two cells are C13 and L13. On the Spring/Summer tab they are C8 and L8.</p>
+                <p>Section Modality has to be chosen from its dropdown, because nothing can be pasted into it. The table shows which option to pick for each row.</p>
             </div>
         </div>
     </div>
@@ -416,42 +554,72 @@ ONLINE"></textarea>
 
     <div id="result-section" class="result-section">
         <div class="card">
-            <div class="success-msg" id="success-msg">Generated 0 rows</div>
+            <div class="success-msg" id="success-msg"></div>
 
             <div class="table-container">
                 <table id="data-table">
+                    <caption>Edit any cell. The totals and the two paste blocks update as you type.</caption>
                     <thead>
                         <tr>
-                            <th>Course Code/Section</th>
-                            <th>Cr Hrs</th>
-                            <th>Cont Hrs</th>
-                            <th>Eq Hrs</th>
-                            <th>Begin Date</th>
-                            <th>End Date</th>
-                            <th>Mon</th>
-                            <th>Tue</th>
-                            <th>Wed</th>
-                            <th>Thu</th>
-                            <th>Fri</th>
-                            <th>Room</th>
-                            <th>Online</th>
-                            <th></th>
+                            <th scope="col">Course Code/Section<span class="col-ref">column C</span></th>
+                            <th scope="col">Credit Hrs<span class="col-ref">column D</span></th>
+                            <th scope="col">Contact Hrs<span class="col-ref">column E</span></th>
+                            <th scope="col">Equated Hrs<span class="col-ref">column F</span></th>
+                            <th scope="col">BASE Credits<span class="col-ref">column G</span></th>
+                            <th scope="col">EC Credits<span class="col-ref">column H</span></th>
+                            <th scope="col">XXC Credits<span class="col-ref">column I</span></th>
+                            <th scope="col">Section Modality<span class="col-ref">dropdown, not pasted</span></th>
+                            <th scope="col">Begin Date<span class="col-ref">column L</span></th>
+                            <th scope="col">End Date<span class="col-ref">column M</span></th>
+                            <th scope="col">Co-listed</th>
+                            <th scope="col"><span class="col-ref">Remove</span></th>
                         </tr>
                     </thead>
-                    <tbody id="table-body">
-                    </tbody>
+                    <tbody id="table-body"></tbody>
+                    <tfoot>
+                        <tr>
+                            <td>TOTAL</td>
+                            <td id="total-cr"></td>
+                            <td id="total-cont"></td>
+                            <td id="total-eq"></td>
+                            <td id="total-base"></td>
+                            <td id="total-ec"></td>
+                            <td id="total-xxc"></td>
+                            <td colspan="5"></td>
+                        </tr>
+                    </tfoot>
                 </table>
             </div>
             <button class="btn btn-secondary add-row-btn" onclick="addEmptyRow()">+ Add Row</button>
 
-            <div class="tsv-section">
-                <h3>Tab-Separated Values (for spreadsheet)</h3>
-                <div class="tsv-output" id="tsv-output"></div>
+            <p class="check-note">Check the table against your schedule before pasting.</p>
+
+            <div class="warning-banner" id="base-warning" role="alert"></div>
+
+            <div class="paste-block">
+                <h3>Block 1 — Course Code through XXC Credits</h3>
+                <p class="where">Click the first cell of the Course Code column, then paste. That is C13 on Fall and Winter, C8 on Spring/Summer.</p>
+                <div class="tsv-output" id="tsv-left" aria-label="Tab separated values for columns C through I"></div>
                 <div class="button-row">
-                    <button class="btn" onclick="copyTSV()">Copy to Clipboard</button>
-                    <button class="btn btn-secondary" onclick="downloadTSV()">Download TSV</button>
-                    <span class="copy-feedback" id="copy-feedback">Copied!</span>
+                    <button class="btn" onclick="copyBlock('tsv-left', 'feedback-left')">Copy Block 1</button>
+                    <span class="copy-feedback" id="feedback-left" role="status">Copied</span>
                 </div>
+            </div>
+
+            <div class="paste-block">
+                <h3>Block 2 — Begin Date and End Date</h3>
+                <p class="where">Click the first cell of the Begin Date column, then paste. That is L13 on Fall and Winter, L8 on Spring/Summer.</p>
+                <div class="tsv-output" id="tsv-right" aria-label="Tab separated values for columns L and M"></div>
+                <div class="button-row">
+                    <button class="btn" onclick="copyBlock('tsv-right', 'feedback-right')">Copy Block 2</button>
+                    <span class="copy-feedback" id="feedback-right" role="status">Copied</span>
+                </div>
+            </div>
+
+            <div class="info-note" id="colisted-note"></div>
+
+            <div class="button-row">
+                <button class="btn btn-secondary" onclick="downloadTSV()">Download the whole table</button>
             </div>
         </div>
     </div>
@@ -503,9 +671,43 @@ const HOUR_MAP = {
     "1221": [3, 3, 4]
 };
 
+// Base load target in equated hours. Whole sections only; a class cannot be split.
+// Landing on 15 exactly is the norm. Sixteen is acceptable when the sections do
+// not divide evenly. Anything above that has to be sorted out by hand.
+const BASE_TARGET = 15;
+const BASE_CEILING = 16;
+
+// Exactly as they appear in the form's dropdown, trailing space included.
+const MODALITY = {
+    ON_CAMPUS: "On-Campus ",
+    HYBRID: "Hybrid-In-person/Online",
+    ONLINE: "Online"
+};
+
+const MODALITY_OPTIONS = [
+    "",
+    "Flexible Learning",
+    "Hybrid-In-person/Online",
+    "Hybrid-In-person/Remotely",
+    "Hybrid-Online/Remotely",
+    "On-Campus ",
+    "Online",
+    "Remote"
+];
+
+// Section letter to modality. S and C sections meet on campus, H sections are
+// hybrid, O sections are online. Anything unusual gets changed by hand.
+function modalityForSection(sectionCode) {
+    const letter = (sectionCode || "").charAt(0).toUpperCase();
+    if (letter === "S" || letter === "C") return MODALITY.ON_CAMPUS;
+    if (letter === "H") return MODALITY.HYBRID;
+    if (letter === "O") return MODALITY.ONLINE;
+    return "";
+}
+
 let tableData = [];
 
-// === PARSING FUNCTIONS ===
+// === PARSING ===
 function generateTable() {
     const messyText = document.getElementById('schedule-input').value;
 
@@ -522,11 +724,9 @@ function generateTable() {
         return;
     }
 
-    // Find start positions
     const starts = matches.map(m => m.index);
     starts.push(messyText.length);
 
-    // Extract blocks
     const blocks = [];
     for (let i = 0; i < starts.length - 1; i++) {
         blocks.push(messyText.substring(starts[i], starts[i + 1]));
@@ -543,97 +743,191 @@ function generateTable() {
         const cNum = parts[1];
         const sCode = parts[2];
 
-        const hours = HOUR_MAP[cNum] || [3, 3, 3];
-        const [cr, cont, eq] = hours;
+        const [cr, cont, eq] = HOUR_MAP[cNum] || [3, 3, 3];
 
-        // Extract dates
         const dateFinds = [...block.matchAll(/(\d{1,2}\/\d{1,2}\/\d{4})/g)].map(m => m[1]);
         const bDate = dateFinds[0] || "";
         const eDate = dateFinds[dateFinds.length - 1] || "";
 
-        // Extract time
         const tMatch = block.match(/(\d{1,2}:\d{2}(?:\s*[AP]M)?\s*-\s*\d{1,2}:\d{2}\s*[AP]M)/i);
-        const timeS = tMatch ? tMatch[1].toUpperCase() : "";
-
-        // Extract days
-        const daysF = new Set();
-        if (tMatch) {
-            const upBlock = block.toUpperCase();
-            if (upBlock.includes("M/W") || upBlock.includes("MW")) {
-                daysF.add("Mon");
-                daysF.add("Wed");
-            }
-            if (upBlock.includes("T/TH") || upBlock.includes("TTH") || upBlock.includes("T/R")) {
-                daysF.add("Tue");
-                daysF.add("Thu");
-            }
-            if (/\bM\b/.test(upBlock)) daysF.add("Mon");
-            if (/\bT\b/.test(upBlock)) daysF.add("Tue");
-            if (/\bW\b/.test(upBlock)) daysF.add("Wed");
-            if (/\bR\b/.test(upBlock) || upBlock.includes("TH")) daysF.add("Thu");
-            if (/\bF\b/.test(upBlock)) daysF.add("Fri");
-        }
-
-        // Extract room
-        let physical = "";
-        const roomSearch = block.match(/SOU-([A-Z]),\s*(\d+)/);
-        if (roomSearch) {
-            physical = `S${roomSearch[1]}-${roomSearch[2]}`;
-        }
-        const roomD = physical || (block.toUpperCase().includes("REMOTE") ? "Remote" : "");
-
-        // Check if online
-        const isOnline = block.toUpperCase().includes("ONLINE") && !timeS;
+        const timeS = tMatch ? tMatch[1].toUpperCase().replace(/\s+/g, ' ') : "";
 
         tableData.push({
+            courseNum: cNum,
+            sectionCode: sCode,
+            meetingTime: timeS,
+            meetingDays: extractDays(block, !!tMatch),
             courseCode: fCode.replace(/-/g, " "),
             crHrs: cr,
             contHrs: cont,
             eqHrs: eq,
+            base: "",
+            ec: "",
+            xxc: "",
+            modality: modalityForSection(sCode),
             beginDate: bDate,
             endDate: eDate,
-            mon: daysF.has("Mon") ? timeS : "",
-            tue: daysF.has("Tue") ? timeS : "",
-            wed: daysF.has("Wed") ? timeS : "",
-            thu: daysF.has("Thu") ? timeS : "",
-            fri: daysF.has("Fri") ? timeS : "",
-            room: roomD,
-            online: isOnline ? "Yes" : ""
+            coListed: false
         });
     }
 
+    markCoListedSections();
+    assignBaseAndEC();
     renderTable();
-    document.getElementById('success-msg').textContent = `Generated ${tableData.length} rows`;
+
     document.getElementById('result-section').classList.add('show');
     document.getElementById('result-section').scrollIntoView({ behavior: 'smooth' });
 }
 
+function extractDays(block, hasTime) {
+    const days = new Set();
+    if (!hasTime) return days;
+
+    const upBlock = block.toUpperCase();
+    if (upBlock.includes("M/W") || upBlock.includes("MW")) {
+        days.add("Mon");
+        days.add("Wed");
+    }
+    if (upBlock.includes("T/TH") || upBlock.includes("TTH") || upBlock.includes("T/R")) {
+        days.add("Tue");
+        days.add("Thu");
+    }
+    if (/\bM\b/.test(upBlock)) days.add("Mon");
+    if (/\bT\b/.test(upBlock)) days.add("Tue");
+    if (/\bW\b/.test(upBlock)) days.add("Wed");
+    if (/\bR\b/.test(upBlock) || upBlock.includes("TH")) days.add("Thu");
+    if (/\bF\b/.test(upBlock)) days.add("Fri");
+    return days;
+}
+
+// Two sections of the same course meeting at the same time on the same days
+// across the same dates are co-listed: one section is reserved for students
+// also taking the co-req, the other is open. It is one class taught once, so
+// only the lower section number carries the hours.
+function coListedGroups() {
+    const groups = new Map();
+
+    tableData.forEach(row => {
+        if (!row.meetingTime) return;
+        const days = [...row.meetingDays].sort().join(',');
+        const key = [row.courseNum, row.beginDate, row.endDate, row.meetingTime, days].join('|');
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(row);
+    });
+
+    return [...groups.values()]
+        .filter(group => group.length > 1)
+        .map(group => [...group].sort((a, b) => a.sectionCode.localeCompare(b.sectionCode)));
+}
+
+function markCoListedSections() {
+    coListedGroups().forEach(sorted => {
+        sorted.slice(1).forEach(row => {
+            row.coListed = true;
+            row.crHrs = "";
+            row.contHrs = "";
+            row.eqHrs = "";
+            row.base = "";
+            row.ec = "";
+            row.xxc = "";
+            row.modality = "";
+        });
+    });
+}
+
+// Fill BASE up to the target using whole sections, then put the rest in EC.
+// Prefers an exact hit on the target; failing that, takes the smallest total
+// above it. When two combinations tie, the earlier-listed sections stay in BASE.
+function assignBaseAndEC() {
+    tableData.forEach(row => { row.base = ""; row.ec = ""; });
+
+    const candidates = tableData
+        .map((row, index) => ({ index, hours: Number(row.eqHrs) }))
+        .filter(c => Number.isFinite(c.hours) && c.hours > 0);
+
+    if (candidates.length === 0) return;
+    if (candidates.length > 20) return;
+
+    const total = candidates.reduce((sum, c) => sum + c.hours, 0);
+
+    if (total <= BASE_TARGET) {
+        candidates.forEach(c => { tableData[c.index].base = tableData[c.index].eqHrs; });
+        return;
+    }
+
+    let bestMask = null;
+    let bestSum = Infinity;
+
+    for (let mask = 0; mask < (1 << candidates.length); mask++) {
+        let sum = 0;
+        for (let bit = 0; bit < candidates.length; bit++) {
+            if (mask & (1 << bit)) sum += candidates[bit].hours;
+        }
+        if (sum < BASE_TARGET) continue;
+        if (sum < bestSum || (sum === bestSum && prefersEarlier(mask, bestMask, candidates.length))) {
+            bestSum = sum;
+            bestMask = mask;
+        }
+    }
+
+    if (bestMask === null) return;
+
+    candidates.forEach((c, bit) => {
+        const row = tableData[c.index];
+        if (bestMask & (1 << bit)) {
+            row.base = row.eqHrs;
+        } else {
+            row.ec = row.eqHrs;
+        }
+    });
+}
+
+// True when candidate keeps an earlier section in BASE than incumbent does.
+function prefersEarlier(candidate, incumbent, length) {
+    if (incumbent === null) return true;
+    for (let bit = 0; bit < length; bit++) {
+        const inCandidate = (candidate & (1 << bit)) !== 0;
+        const inIncumbent = (incumbent & (1 << bit)) !== 0;
+        if (inCandidate !== inIncumbent) return inCandidate;
+    }
+    return false;
+}
+
+// === RENDERING ===
 function renderTable() {
     const tbody = document.getElementById('table-body');
     tbody.innerHTML = '';
 
     tableData.forEach((row, index) => {
         const tr = document.createElement('tr');
+        if (row.coListed) tr.className = 'is-colisted';
         tr.innerHTML = `
-            <td><input type="text" value="${escapeHtml(row.courseCode)}" onchange="updateRow(${index}, 'courseCode', this.value)"></td>
-            <td><input type="text" class="narrow" value="${row.crHrs}" onchange="updateRow(${index}, 'crHrs', this.value)"></td>
-            <td><input type="text" class="narrow" value="${row.contHrs}" onchange="updateRow(${index}, 'contHrs', this.value)"></td>
-            <td><input type="text" class="narrow" value="${row.eqHrs}" onchange="updateRow(${index}, 'eqHrs', this.value)"></td>
-            <td><input type="text" value="${escapeHtml(row.beginDate)}" onchange="updateRow(${index}, 'beginDate', this.value)"></td>
-            <td><input type="text" value="${escapeHtml(row.endDate)}" onchange="updateRow(${index}, 'endDate', this.value)"></td>
-            <td><input type="text" class="time-input" value="${escapeHtml(row.mon)}" onchange="updateRow(${index}, 'mon', this.value)"></td>
-            <td><input type="text" class="time-input" value="${escapeHtml(row.tue)}" onchange="updateRow(${index}, 'tue', this.value)"></td>
-            <td><input type="text" class="time-input" value="${escapeHtml(row.wed)}" onchange="updateRow(${index}, 'wed', this.value)"></td>
-            <td><input type="text" class="time-input" value="${escapeHtml(row.thu)}" onchange="updateRow(${index}, 'thu', this.value)"></td>
-            <td><input type="text" class="time-input" value="${escapeHtml(row.fri)}" onchange="updateRow(${index}, 'fri', this.value)"></td>
-            <td><input type="text" value="${escapeHtml(row.room)}" onchange="updateRow(${index}, 'room', this.value)"></td>
-            <td><input type="text" class="narrow" value="${escapeHtml(row.online)}" onchange="updateRow(${index}, 'online', this.value)"></td>
-            <td><button class="delete-btn" onclick="deleteRow(${index})">X</button></td>
+            <td><input type="text" aria-label="Course code, row ${index + 1}" value="${escapeHtml(row.courseCode)}" onchange="updateRow(${index}, 'courseCode', this.value)"></td>
+            <td><input type="text" class="narrow" aria-label="Credit hours, row ${index + 1}" value="${escapeHtml(row.crHrs)}" onchange="updateRow(${index}, 'crHrs', this.value)"></td>
+            <td><input type="text" class="narrow" aria-label="Contact hours, row ${index + 1}" value="${escapeHtml(row.contHrs)}" onchange="updateRow(${index}, 'contHrs', this.value)"></td>
+            <td><input type="text" class="narrow" aria-label="Equated hours, row ${index + 1}" value="${escapeHtml(row.eqHrs)}" onchange="updateRow(${index}, 'eqHrs', this.value)"></td>
+            <td><input type="text" class="narrow" aria-label="BASE credits, row ${index + 1}" value="${escapeHtml(row.base)}" onchange="updateRow(${index}, 'base', this.value)"></td>
+            <td><input type="text" class="narrow" aria-label="EC credits, row ${index + 1}" value="${escapeHtml(row.ec)}" onchange="updateRow(${index}, 'ec', this.value)"></td>
+            <td><input type="text" class="narrow" aria-label="XXC credits, row ${index + 1}" value="${escapeHtml(row.xxc)}" onchange="updateRow(${index}, 'xxc', this.value)"></td>
+            <td>${modalitySelect(index, row.modality)}</td>
+            <td><input type="text" aria-label="Begin date, row ${index + 1}" value="${escapeHtml(row.beginDate)}" onchange="updateRow(${index}, 'beginDate', this.value)"></td>
+            <td><input type="text" aria-label="End date, row ${index + 1}" value="${escapeHtml(row.endDate)}" onchange="updateRow(${index}, 'endDate', this.value)"></td>
+            <td>${row.coListed ? '<span class="badge">co-listed</span>' : ''}</td>
+            <td><button class="delete-btn" aria-label="Remove row ${index + 1}" onclick="deleteRow(${index})">✕</button></td>
         `;
         tbody.appendChild(tr);
     });
 
-    updateTSV();
+    updateOutputs();
+}
+
+function modalitySelect(index, selected) {
+    const options = MODALITY_OPTIONS.map(opt => {
+        const label = opt === "" ? "—" : opt.trim();
+        const isSelected = opt === selected ? ' selected' : '';
+        return `<option value="${escapeHtml(opt)}"${isSelected}>${escapeHtml(label)}</option>`;
+    }).join('');
+    return `<select aria-label="Section modality, row ${index + 1}" onchange="updateRow(${index}, 'modality', this.value)">${options}</select>`;
 }
 
 function escapeHtml(str) {
@@ -643,67 +937,147 @@ function escapeHtml(str) {
 
 function updateRow(index, field, value) {
     tableData[index][field] = value;
-    updateTSV();
+    updateOutputs();
 }
 
 function deleteRow(index) {
     tableData.splice(index, 1);
     renderTable();
-    document.getElementById('success-msg').textContent = `${tableData.length} rows`;
 }
 
 function addEmptyRow() {
     tableData.push({
+        courseNum: "",
+        sectionCode: "",
+        meetingTime: "",
+        meetingDays: new Set(),
         courseCode: "",
-        crHrs: 3,
-        contHrs: 3,
-        eqHrs: 3,
+        crHrs: "",
+        contHrs: "",
+        eqHrs: "",
+        base: "",
+        ec: "",
+        xxc: "",
+        modality: "",
         beginDate: "",
         endDate: "",
-        mon: "",
-        tue: "",
-        wed: "",
-        thu: "",
-        fri: "",
-        room: "",
-        online: ""
+        coListed: false
     });
     renderTable();
-    document.getElementById('success-msg').textContent = `${tableData.length} rows`;
 }
 
-function updateTSV() {
-    const lines = tableData.map(row => [
-        row.courseCode,
-        row.crHrs,
-        row.contHrs,
-        row.eqHrs,
-        row.beginDate,
-        row.endDate,
-        row.mon,
-        row.tue,
-        row.wed,
-        row.thu,
-        row.fri,
-        row.room,
-        row.online
+// === OUTPUT ===
+function updateOutputs() {
+    const left = tableData.map(row => [
+        row.courseCode, row.crHrs, row.contHrs, row.eqHrs, row.base, row.ec, row.xxc
     ].join('\t'));
 
-    document.getElementById('tsv-output').textContent = lines.join('\n');
+    const right = tableData.map(row => [row.beginDate, row.endDate].join('\t'));
+
+    document.getElementById('tsv-left').textContent = left.join('\n');
+    document.getElementById('tsv-right').textContent = right.join('\n');
+
+    updateTotals();
+    updateSummary();
+    updateBaseWarning();
+    updateCoListedNote();
 }
 
-function copyTSV() {
-    const tsv = document.getElementById('tsv-output').textContent;
-    navigator.clipboard.writeText(tsv).then(() => {
-        const feedback = document.getElementById('copy-feedback');
+function sumColumn(field) {
+    return tableData.reduce((sum, row) => {
+        const n = Number(row[field]);
+        return Number.isFinite(n) && row[field] !== "" ? sum + n : sum;
+    }, 0);
+}
+
+function updateTotals() {
+    document.getElementById('total-cr').textContent = sumColumn('crHrs');
+    document.getElementById('total-cont').textContent = sumColumn('contHrs');
+    document.getElementById('total-eq').textContent = sumColumn('eqHrs');
+    document.getElementById('total-base').textContent = sumColumn('base');
+    document.getElementById('total-ec').textContent = sumColumn('ec');
+    document.getElementById('total-xxc').textContent = sumColumn('xxc');
+}
+
+function updateSummary() {
+    const el = document.getElementById('success-msg');
+    const rows = tableData.length;
+    const coListed = tableData.filter(r => r.coListed).length;
+    const base = sumColumn('base');
+    const ec = sumColumn('ec');
+
+    const lines = [`Generated ${rows} ${rows === 1 ? 'row' : 'rows'}.`];
+
+    if (coListed > 0) {
+        lines.push(`${coListed} ${coListed === 1 ? 'row was' : 'rows were'} read as a co-listed second section, so the hours were left off. Those rows carry only a course code and their two dates.`);
+    }
+
+    if (base === BASE_TARGET) {
+        lines.push(`BASE comes to ${base}, which is the target. EC holds the remaining ${ec}.`);
+    } else if (base > BASE_TARGET) {
+        lines.push(`BASE comes to ${base}. No combination of whole sections lands on ${BASE_TARGET} exactly, and this is the smallest total above it. EC holds the remaining ${ec}.`);
+    } else if (base > 0) {
+        lines.push(`BASE comes to ${base}, which is under the target of ${BASE_TARGET}. Everything available is in BASE and EC is empty.`);
+    }
+
+    el.innerHTML = lines.map(line => `<p>${escapeHtml(line)}</p>`).join('');
+}
+
+function updateBaseWarning() {
+    const el = document.getElementById('base-warning');
+    const base = sumColumn('base');
+
+    if (base <= BASE_CEILING) {
+        el.classList.remove('show');
+        el.innerHTML = '';
+        return;
+    }
+
+    const over = base - BASE_CEILING;
+    el.innerHTML = '<strong>Check BASE before you paste this.</strong>' +
+        `<p>BASE adds up to ${base} equated hours, which is ${over} above the ceiling of ${BASE_CEILING}. ` +
+        `No combination of whole sections lands on ${BASE_TARGET} or ${BASE_CEILING}, so the tool could not ` +
+        'reach an acceptable total on its own. Move a section into EC by hand, or check whether a co-listed ' +
+        'pair was missed and is being counted twice.</p>';
+    el.classList.add('show');
+}
+
+function updateCoListedNote() {
+    const el = document.getElementById('colisted-note');
+    const groups = coListedGroups();
+
+    if (groups.length === 0) {
+        el.innerHTML = '<p>No co-listed pairs were detected.</p>';
+        return;
+    }
+
+    const items = groups
+        .map(group => `<li>${escapeHtml(group.map(row => row.courseCode).join(' and '))}</li>`)
+        .join('');
+
+    el.innerHTML = '<p>The tool detected the following co-listed pairs:</p><ul>' + items + '</ul>';
+}
+
+function copyBlock(sourceId, feedbackId) {
+    const text = document.getElementById(sourceId).textContent;
+    navigator.clipboard.writeText(text).then(() => {
+        const feedback = document.getElementById(feedbackId);
         feedback.classList.add('show');
         setTimeout(() => feedback.classList.remove('show'), 2000);
     });
 }
 
 function downloadTSV() {
-    const tsv = document.getElementById('tsv-output').textContent;
-    const blob = new Blob([tsv], { type: 'text/tab-separated-values' });
+    const header = ['Course Code/Section', 'Credit Hrs', 'Contact Hrs', 'Equated Hrs',
+                    'BASE Credits', 'EC Credits', 'XXC Credits', 'Section Modality',
+                    'Begin Date', 'End Date'].join('\t');
+
+    const lines = tableData.map(row => [
+        row.courseCode, row.crHrs, row.contHrs, row.eqHrs, row.base, row.ec, row.xxc,
+        row.modality.trim(), row.beginDate, row.endDate
+    ].join('\t'));
+
+    const blob = new Blob([[header, ...lines].join('\n')], { type: 'text/tab-separated-values' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
