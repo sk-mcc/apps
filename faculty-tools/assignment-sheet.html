@@ -437,12 +437,6 @@
             margin-bottom: 0.75rem;
         }
 
-        .paste-block .where {
-            font-size: 0.85rem;
-            color: var(--color-text-dim);
-            margin-bottom: 0.75rem;
-        }
-
         .tsv-output {
             background: var(--bg-input);
             border: 1px solid var(--border-color);
@@ -473,12 +467,6 @@
 
         .copy-feedback.show {
             visibility: visible;
-        }
-
-        .check-note {
-            margin-top: 1.5rem;
-            font-size: 0.95rem;
-            font-weight: 500;
         }
 
         .info-note {
@@ -561,16 +549,16 @@ ONLINE"></textarea>
                 <table id="data-table">
                     <thead>
                         <tr>
-                            <th scope="col">Course Code/Section<span class="col-ref">column C</span></th>
-                            <th scope="col">Credit Hrs<span class="col-ref">column D</span></th>
-                            <th scope="col">Contact Hrs<span class="col-ref">column E</span></th>
-                            <th scope="col">Equated Hrs<span class="col-ref">column F</span></th>
-                            <th scope="col">BASE Credits<span class="col-ref">column G</span></th>
-                            <th scope="col">EC Credits<span class="col-ref">column H</span></th>
-                            <th scope="col">XXC Credits<span class="col-ref">column I</span></th>
-                            <th scope="col">Section Modality<span class="col-ref">dropdown, not pasted</span></th>
-                            <th scope="col">Begin Date<span class="col-ref">column L</span></th>
-                            <th scope="col">End Date<span class="col-ref">column M</span></th>
+                            <th scope="col">Course Code/Section</th>
+                            <th scope="col">Credit Hrs</th>
+                            <th scope="col">Contact Hrs</th>
+                            <th scope="col">Equated Hrs</th>
+                            <th scope="col">BASE Credits</th>
+                            <th scope="col">EC Credits</th>
+                            <th scope="col">XXC Credits</th>
+                            <th scope="col">Section Modality</th>
+                            <th scope="col">Begin Date</th>
+                            <th scope="col">End Date</th>
                             <th scope="col">Co-listed</th>
                             <th scope="col"><span class="col-ref">Remove</span></th>
                         </tr>
@@ -592,14 +580,11 @@ ONLINE"></textarea>
             </div>
             <button class="btn btn-secondary add-row-btn" onclick="addEmptyRow()">+ Add Row</button>
 
-            <p class="check-note">Check the table against your schedule before pasting.</p>
-
             <div class="warning-banner" id="base-warning" role="alert"></div>
 
             <div class="paste-block">
                 <h3>Block 1 — Course Code through XXC Credits</h3>
-                <p class="where">Click the first cell of the Course Code column, then paste. That is C13 on Fall and Winter, C8 on Spring/Summer.</p>
-                <div class="tsv-output" id="tsv-left" aria-label="Tab separated values for columns C through I"></div>
+                <div class="tsv-output" id="tsv-left" aria-label="Tab separated values for Course Code through XXC Credits"></div>
                 <div class="button-row">
                     <button class="btn" onclick="copyBlock('tsv-left', 'feedback-left')">Copy Block 1</button>
                     <span class="copy-feedback" id="feedback-left" role="status">Copied</span>
@@ -608,8 +593,7 @@ ONLINE"></textarea>
 
             <div class="paste-block">
                 <h3>Block 2 — Begin Date and End Date</h3>
-                <p class="where">Click the first cell of the Begin Date column, then paste. That is L13 on Fall and Winter, L8 on Spring/Summer.</p>
-                <div class="tsv-output" id="tsv-right" aria-label="Tab separated values for columns L and M"></div>
+                <div class="tsv-output" id="tsv-right" aria-label="Tab separated values for Begin Date and End Date"></div>
                 <div class="button-row">
                     <button class="btn" onclick="copyBlock('tsv-right', 'feedback-right')">Copy Block 2</button>
                     <span class="copy-feedback" id="feedback-right" role="status">Copied</span>
@@ -1009,7 +993,7 @@ function updateSummary() {
     const lines = [`Generated ${rows} ${rows === 1 ? 'row' : 'rows'}.`];
 
     if (coListed > 0) {
-        lines.push(`${coListed} ${coListed === 1 ? 'row was' : 'rows were'} read as a co-listed second section, so the hours were left off. Those rows carry only a course code and their two dates.`);
+        lines.push(`${coListed} ${coListed === 1 ? 'row was' : 'rows were'} read as a co-listed second section, so the hours were left off.`);
     }
 
     if (base === BASE_TARGET) {
