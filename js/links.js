@@ -164,7 +164,7 @@ const TOOLS = [
   },
 
   {
-    name: "Assignment Sheet Generator",
+    name: "Faculty Assignment Sheet (FAS) Helper",
     url: "faculty-tools/assignment-sheet.html",
     icon: "clipboard-check",
     description: "Generate and format faculty assignment sheets."
