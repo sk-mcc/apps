@@ -1,41 +1,14 @@
-# Faculty Tools
+# apps Repo
 
-## Repository Structure
-- **Git root:** `/home/skarlis/faculty-tools-github/` (one level above the apps)
-- **Remote:** `origin` → `https://github.com/sk-mcc/apps.git`, branch `main`
-- **GitHub Pages:** https://sk-mcc.github.io/apps/
-- **Owner:** sk-mcc GitHub account
-- **Note:** The old `sk-mcc/faculty-tools-github` repo has been archived. All work goes to `sk-mcc/apps`.
+Sarah's teaching tools, shared with colleagues and served from GitHub Pages at `https://sk-mcc.github.io/apps/`. Owned by the `sk-mcc` GitHub account. Not student-facing.
 
-## CRITICAL: File Paths
-- The git root is `/home/skarlis/faculty-tools-github/` but the repo tree has NO `apps/` prefix.
-- Files tracked by git live at the **repo root level**: e.g. `faculty-tools/door-sign.html`, `QuickPoll/index.html`
-- There is also a local `apps/` subdirectory with working copies — these are NOT tracked by git.
-- **Always edit and stage files relative to the repo root**, not from `apps/`. For example:
-  - Correct: `git add faculty-tools/door-sign.html` (from repo root)
-  - Wrong: editing `apps/faculty-tools/door-sign.html` (untracked copy)
-- When committing, run from the repo root or use paths relative to it.
+## Read these first, before doing any work in this repo
 
-## Apps Overview
+The information governing this work is deliberately not kept in this repo, because this repo is public. Nothing here repeats it, so skipping these files means working without it. **Read each one in full — do not skim for the sections that look relevant.**
 
-### `faculty-tools/door-sign.html`
-- Self-contained single-file HTML app (no build, no dependencies)
-- Generates printable weekly office door signs from Self-Service schedule paste
-- Parses ENGL course sections, times, days, locations
-- Day parsing: "TH" must be extracted before "T" to avoid Tuesday/Thursday collision
-- Section prefixes: S/C/H = in-person timetable, O = online-only listing
-- Overlapping sections auto-merge
-- Office hours support flexible formats (ranges, slash-separated, virtual)
-- Generated HTML uses CSS Grid calendar; print styles target single-page letter portrait
+1. `~/MEGA/work-with-claude-code/CLAUDE.md` — how Sarah wants the work done.
+2. `~/MEGA/work-with-claude-code/work/Apps/CLAUDE.md` — these apps: what each one is, how the two repos are split, how they publish, and the Faculty Assignment Sheet details the assignment sheet tool depends on.
 
-### `selection-tool/` — Schedule cleanup + selection tool (sort.html, south.html, login.html)
-### `QuickPoll/` — Polling tool (separate Firebase project)
-### `faculty-tools/` — Additional Python tools (PDF accessibility, PDF-to-HTML)
-### `podium/` — (needs documentation)
+Open items are tracked in `~/MEGA/work-with-claude-code/work/Apps/todo.md`.
 
-## Committing & Pushing
-- Push to `origin main` — this is what GitHub Pages serves
-- Commit messages should be descriptive of the what and why
-
-## TODO
-- As new apps are built or older apps are revisited, add their details to this file so Claude has full context for each tool.
+**Anything worth writing down about these apps goes in that folder, not in this file.** This repo is public and the notes are not meant to be.
